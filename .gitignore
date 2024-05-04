@@ -3,3 +3,6 @@
 uploads/
 vlc.txt
 .DS_Store
+flags.txt
+build.sh
+.cargo/config.toml

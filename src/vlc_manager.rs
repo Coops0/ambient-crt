@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use std::process::{Child, Command};
 use std::sync::mpsc::{self, Receiver, Sender};
 
+use crate::FLAGS;
+
 pub enum ThreadMessage {
     StopVideo,
     ChangeVideo {
@@ -49,17 +51,9 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
 fn play_video(path: &PathBuf, muted: bool, visualizer: &Option<String>) -> anyhow::Result<Child> {
     let mut vlc_builder = Command::new("vlc");
 
-    vlc_builder
-        .arg("--fullscreen")
-        .arg("--loop")
-        .arg("--no-video-title-show")
-        .arg("--play-and-exit")
-        .arg("--no-osd")
-        .arg("--no-volume-save")
-        // .arg("--intf=dummy")
-        .arg("--video-on-top")
-        .arg("--macosx-continue-playback=2") // ?? not working
-        .arg("--no-snapshot-preview");
+    for flag in unsafe { FLAGS.get_unchecked() } {
+        vlc_builder.arg(flag);
+    }
 
     if muted {
         vlc_builder.arg("--gain=0");

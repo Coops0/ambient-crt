@@ -25,6 +25,7 @@ dependencies = [
  "axum",
  "futures",
  "futures-util",
+ "once_cell",
  "serde",
  "tokio",
  "tokio-stream",
