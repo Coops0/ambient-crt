@@ -63,11 +63,16 @@
                         <span class="ml-2 text-gray-700">Muted</span>
                     </label>
                     <label class="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="visualizerCheckbox"
-                            class="form-checkbox h-5 w-5 text-blue-500"
-                        />
+                        <select
+                            id="visualizer"
+                            class="form-select block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                        >
+                            <option value="none" selected>None</option>
+                            <option value="scope">Scope</option>
+                            <option value="spectrum">Spectrum</option>
+                            <option value="spectrometer">Spectrometer</option>
+                            <option value="vuMeter">VU Meter</option>
+                        </select>
                         <span class="ml-2 text-gray-700">Visualizer</span>
                     </label>
                 </div>
@@ -116,7 +121,7 @@
 
             async function playVideo(videoName) {
                 const muted = $("#mutedCheckbox").checked;
-                const visualizer = $("#visualizerCheckbox").checked;
+                const visualizer = $("#visualizer").value;
 
                 const response = await fetch("/videos", {
                     method: "PUT",
@@ -124,7 +129,8 @@
                     body: JSON.stringify({
                         file_name: videoName,
                         muted,
-                        visualizer,
+                        visualizer:
+                            visualizer === "none" ? undefined : visualizer,
                     }),
                 });
 

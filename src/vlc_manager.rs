@@ -8,7 +8,7 @@ pub enum ThreadMessage {
     ChangeVideo {
         path: PathBuf,
         muted: bool,
-        visualizer: bool,
+        visualizer: Option<String>,
     },
 }
 
@@ -33,7 +33,7 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
                 }
 
                 let vlc_instance =
-                    play_video(&path, muted, visualizer).expect("failed to play video");
+                    play_video(&path, muted, &visualizer).expect("failed to play video");
 
                 current_vlc_instance = Some(vlc_instance);
             }
@@ -46,7 +46,7 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
     }
 }
 
-fn play_video(path: &PathBuf, muted: bool, visualizer: bool) -> anyhow::Result<Child> {
+fn play_video(path: &PathBuf, muted: bool, visualizer: &Option<String>) -> anyhow::Result<Child> {
     let mut vlc_builder = Command::new("vlc");
 
     vlc_builder
@@ -65,10 +65,10 @@ fn play_video(path: &PathBuf, muted: bool, visualizer: bool) -> anyhow::Result<C
         vlc_builder.arg("--gain=0");
     }
 
-    if visualizer {
+    if let Some(vis) = visualizer {
         vlc_builder
             .arg("--audio-visual=visual")
-            .arg("--effect-list=scope");
+            .arg(format!("--effect-list={vis}"));
     }
 
     vlc_builder.arg(path);

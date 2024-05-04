@@ -73,8 +73,7 @@ struct SwitchVideoParams {
     file_name: String,
     #[serde(default = "true_fn")]
     muted: bool,
-    #[serde(default)]
-    visualizer: bool,
+    visualizer: Option<String>,
 }
 
 async fn switch_video(
