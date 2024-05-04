@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CRT Ambience - File Upload</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-100">
+        <div class="max-w-lg mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold mb-8 text-center">
+                CRT Ambience - File Upload
+            </h1>
+
+            <form id="uploadForm" class="mb-8">
+                <div class="mb-4">
+                    <label
+                        for="fileInput"
+                        class="block mb-2 font-bold text-gray-700"
+                        >Select Video File</label
+                    >
+                    <div class="relative">
+                        <input type="file" id="fileInput" class="hidden" />
+                        <input
+                            spellcheck="false"
+                            type="text"
+                            id="fileNameInput"
+                            class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Choose file..."
+                        />
+                        <button
+                            type="button"
+                            id="browseButton"
+                            class="absolute top-0 right-0 px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            Browse
+                        </button>
+                    </div>
+                </div>
+                <button
+                    type="submit"
+                    class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Upload
+                </button>
+            </form>
+
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-4">Available Videos</h2>
+                <ul id="videoList" class="space-y-4"></ul>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-4">Video Options</h2>
+                <div class="flex items-center">
+                    <label class="flex items-center mr-4">
+                        <input
+                            type="checkbox"
+                            id="mutedCheckbox"
+                            class="form-checkbox h-5 w-5 text-blue-500"
+                            checked
+                        />
+                        <span class="ml-2 text-gray-700">Muted</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="visualizerCheckbox"
+                            class="form-checkbox h-5 w-5 text-blue-500"
+                        />
+                        <span class="ml-2 text-gray-700">Visualizer</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold mb-4">Controls</h2>
+                <button
+                    id="stopButton"
+                    class="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                    Stop Video
+                </button>
+            </div>
+        </div>
+
+        <script>
+            // i love you jquery
+            const $ = (selector) => document.querySelector(selector);
+
+            const fileInput = $("#fileInput");
+            const fileNameInput = $("#fileNameInput");
+            const videoList = $("#videoList");
+
+            async function fetchVideos() {
+                const response = await fetch("/videos");
+                if (!response.ok) {
+                    return console.error("Failed to fetch videos", response);
+                }
+
+                const videos = await response.json();
+                videoList.innerHTML = videos
+                    .map(
+                        (video) => `
+        <li class="flex items-center justify-between bg-white p-4 rounded-md shadow">
+          <span class="text-gray-800">${video.name}</span>
+          <div>
+            <button class="video-button bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2" data-video="${video.name}">Play</button>
+            <button class="delete-button bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
+          </div>
+        </li>
+      `,
+                    )
+                    .join("");
+            }
+
+            async function playVideo(videoName) {
+                const muted = $("#mutedCheckbox").checked;
+                const visualizer = $("#visualizerCheckbox").checked;
+
+                const response = await fetch("/videos", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        file_name: videoName,
+                        muted,
+                        visualizer,
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log("Video switched", response);
+                } else {
+                    console.error("Failed to switch video", response);
+                }
+            }
+
+            async function stopVideo() {
+                const response = await fetch("/stop");
+                if (response.ok) {
+                    console.log("Video stopped", response);
+                } else {
+                    console.error("Failed to stop video", response);
+                }
+            }
+
+            async function uploadVideo(file, fileName) {
+                const response = await fetch(`/videos?file_name=${fileName}`, {
+                    method: "POST",
+                    body: file,
+                });
+
+                if (response.ok) {
+                    console.log("Upload successful", response);
+                    fetchVideos();
+                } else {
+                    console.error("Failed to upload video", response);
+                }
+            }
+
+            async function deleteVideo(videoName) {
+                const response = await fetch(`/videos`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ file_name: videoName }),
+                });
+
+                if (response.ok) {
+                    console.log("Video deleted", response);
+                    fetchVideos();
+                } else {
+                    console.error("Failed to delete video", response);
+                }
+            }
+
+            $("#browseButton").addEventListener("click", () =>
+                fileInput.click(),
+            );
+
+            $("#uploadForm").addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const file = fileInput.files[0];
+                const fileName = fileNameInput.value;
+
+                if (file) {
+                    uploadVideo(file, fileName);
+                }
+            });
+
+            fileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    fileNameInput.value = file.name;
+                }
+            });
+
+            videoList.addEventListener("click", (e) => {
+                const { classList } = e.target;
+                const { video: videoName } = e.target.dataset;
+
+                if (!videoName) {
+                    return;
+                }
+
+                if (classList.contains("video-button")) {
+                    playVideo(videoName);
+                }
+
+                if (classList.contains("delete-button")) {
+                    deleteVideo(videoName);
+                }
+            });
+
+            $("#stopButton").addEventListener("click", stopVideo);
+
+            fetchVideos();
+        </script>
+    </body>
+</html>

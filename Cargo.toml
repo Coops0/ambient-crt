@@ -1,0 +1,24 @@
+[package]
+name = "ambient-crt"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.82"
+axum = { version = "0.7.5", features = ["multipart", "macros"] }
+futures = "0.3.30"
+futures-util = "0.3.30"
+serde = { version = "1.0.200", features = ["derive"] }
+tokio = { version = "1.37.0", features = ["full"] }
+tokio-stream = { version = "0.1.15", features = ["fs"] }
+tokio-util = { version = "0.7.10", features = ["io"] }
+
+[lints.clippy]
+all = "warn"
+# restriction = "warn"
+pedantic = "warn"
+nursery = "warn"
+# cargo = "warn"
+module_name_repetitions = "allow"
