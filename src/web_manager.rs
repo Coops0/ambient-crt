@@ -64,15 +64,11 @@ async fn file_upload(
     Ok(path_string)
 }
 
-const fn true_fn() -> bool {
-    true
-}
-
 #[derive(Deserialize)]
 struct SwitchVideoParams {
     file_name: String,
-    #[serde(default = "true_fn")]
-    muted: bool,
+    #[serde(default)]
+    gain: f32,
     visualizer: Option<String>,
 }
 
@@ -80,7 +76,7 @@ async fn switch_video(
     State(video_sender): State<Sender<ThreadMessage>>,
     Json(SwitchVideoParams {
         file_name,
-        muted,
+        gain,
         visualizer,
     }): Json<SwitchVideoParams>,
 ) -> Result<(), AppError> {
@@ -92,7 +88,7 @@ async fn switch_video(
     video_sender
         .send(ThreadMessage::ChangeVideo {
             path,
-            muted,
+            gain,
             visualizer,
         })
         .map_err(|_| anyhow!("failed to send message to vlc thread"))?;

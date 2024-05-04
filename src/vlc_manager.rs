@@ -9,7 +9,7 @@ pub enum ThreadMessage {
     StopVideo,
     ChangeVideo {
         path: PathBuf,
-        muted: bool,
+        gain: f32,
         visualizer: Option<String>,
     },
 }
@@ -27,7 +27,7 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
         match msg {
             ThreadMessage::ChangeVideo {
                 path,
-                muted,
+                gain,
                 visualizer,
             } => {
                 if let Some(mut vlc) = current_vlc_instance.take() {
@@ -35,7 +35,7 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
                 }
 
                 let vlc_instance =
-                    play_video(&path, muted, &visualizer).expect("failed to play video");
+                    play_video(&path, gain, &visualizer).expect("failed to play video");
 
                 current_vlc_instance = Some(vlc_instance);
             }
@@ -48,16 +48,14 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
     }
 }
 
-fn play_video(path: &PathBuf, muted: bool, visualizer: &Option<String>) -> anyhow::Result<Child> {
+fn play_video(path: &PathBuf, gain: f32, visualizer: &Option<String>) -> anyhow::Result<Child> {
     let mut vlc_builder = Command::new("vlc");
 
     for flag in unsafe { FLAGS.get_unchecked() } {
         vlc_builder.arg(flag);
     }
 
-    if muted {
-        vlc_builder.arg("--gain=0");
-    }
+    vlc_builder.arg(format!("--gain={gain}"));
 
     if let Some(vis) = visualizer {
         vlc_builder

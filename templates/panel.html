@@ -55,12 +55,14 @@
                 <div class="flex items-center">
                     <label class="flex items-center mr-4">
                         <input
-                            type="checkbox"
-                            id="mutedCheckbox"
-                            class="form-checkbox h-5 w-5 text-blue-500"
-                            checked
+                            type="number"
+                            id="gain"
+                            class="form-input w-20 px-2 py-1 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            max="8"
+                            min="0"
+                            value="0"
                         />
-                        <span class="ml-2 text-gray-700">Muted</span>
+                        <span class="ml-2 text-gray-700">Gain</span>
                     </label>
                     <label class="flex items-center">
                         <select
@@ -98,7 +100,7 @@
             const videoList = $("#videoList");
 
             const getSettings = () => ({
-                muted: $("#mutedCheckbox").checked,
+                gain: parseFloat($("#gain").value),
                 visualizer: $("#visualizer").value,
             });
 
