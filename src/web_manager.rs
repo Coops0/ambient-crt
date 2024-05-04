@@ -1,30 +1,29 @@
-use std::path::Path;
-use std::{path::PathBuf, sync::mpsc::Sender};
+use std::{
+    io,
+    path::{Path, PathBuf},
+    sync::mpsc::Sender,
+};
 
 use ::futures::pin_mut;
-use anyhow::anyhow;
-use anyhow::Context;
-use axum::Json;
+use anyhow::{anyhow, Context};
 use axum::{
     body::Bytes,
     extract::{Query, Request, State},
     http::StatusCode,
     response::{Html, IntoResponse},
     routing::get,
-    BoxError, Router,
+    BoxError, Json, Router,
 };
 use futures_util::{Stream, TryStreamExt};
-use serde::Deserialize;
-use serde::Serialize;
-use tokio::fs;
-use tokio::{fs::File, io::BufWriter};
-use tokio_stream::wrappers::ReadDirStream;
-use tokio_stream::StreamExt;
-
-use std::io;
+use serde::{Deserialize, Serialize};
+use tokio::{
+    fs::{self, File},
+    io::BufWriter,
+};
+use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 use tokio_util::io::StreamReader;
 
-use crate::{video_path, vlc_manager::ThreadMessage};
+use crate::{video_path, vlc_manager::ThreadMessage, VIDEO_PATH};
 
 pub fn manager_router() -> Router<Sender<ThreadMessage>> {
     Router::new()
@@ -54,7 +53,7 @@ async fn file_upload(
 ) -> Result<String, AppError> {
     let path = stream_to_file(&file_name, request.into_body().into_data_stream()).await?;
 
-    println!("Uploaded file to {path:?}");
+    println!("uploaded file to {path:?}");
 
     let path_string = path
         .to_str()
@@ -91,7 +90,7 @@ async fn switch_video(
             gain,
             visualizer,
         })
-        .map_err(|_| anyhow!("failed to send message to vlc thread"))?;
+        .context("failed to send message to vlc thread")?;
 
     Ok(())
 }
@@ -99,14 +98,13 @@ async fn switch_video(
 async fn stop_video(State(video_sender): State<Sender<ThreadMessage>>) -> Result<(), AppError> {
     video_sender
         .send(ThreadMessage::StopVideo)
-        .map_err(|_| anyhow!("failed to send message to vlc thread").into())
+        .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
 }
 
 async fn delete_video(Json(FileName { file_name }): Json<FileName>) -> Result<(), AppError> {
-    let path = video_path(&file_name);
-    fs::remove_file(path).await?;
-
-    Ok(())
+    fs::remove_file(video_path(&file_name))
+        .await
+        .map_err(|e| anyhow!("failed to delete video -> {e:?}").into())
 }
 
 #[derive(Serialize)]
@@ -116,7 +114,7 @@ struct VideoInfo {
 }
 
 async fn videos() -> Result<Json<Vec<VideoInfo>>, AppError> {
-    let path = Path::new("./uploads/");
+    let path = Path::new(VIDEO_PATH);
 
     let files = ReadDirStream::new(fs::read_dir(path).await?)
         .into_stream()
