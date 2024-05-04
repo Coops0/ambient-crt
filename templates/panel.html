@@ -97,6 +97,11 @@
             const fileNameInput = $("#fileNameInput");
             const videoList = $("#videoList");
 
+            const getSettings = () => ({
+                muted: $("#mutedCheckbox").checked,
+                visualizer: $("#visualizer").value,
+            });
+
             async function fetchVideos() {
                 const response = await fetch("/videos");
                 if (!response.ok) {
@@ -107,30 +112,25 @@
                 videoList.innerHTML = videos
                     .map(
                         (video) => `
-        <li class="flex items-center justify-between bg-white p-4 rounded-md shadow">
-          <span class="text-gray-800">${video.name}</span>
-          <div>
-            <button class="video-button bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2" data-video="${video.name}">Play</button>
-            <button class="delete-button bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
-          </div>
-        </li>
-      `,
+              <li class="flex items-center justify-between bg-white p-4 rounded-md shadow">
+                <span class="text-gray-800">${video.name}</span>
+                <div>
+                  <button class="video-button bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2" data-video="${video.name}">Play</button>
+                  <button class="delete-button bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
+                </div>
+              </li>
+            `,
                     )
                     .join("");
             }
 
             async function playVideo(videoName) {
-                const muted = $("#mutedCheckbox").checked;
-                const visualizer = $("#visualizer").value;
-
                 const response = await fetch("/videos", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         file_name: videoName,
-                        muted,
-                        visualizer:
-                            visualizer === "none" ? undefined : visualizer,
+                        ...getSettings(),
                     }),
                 });
 
