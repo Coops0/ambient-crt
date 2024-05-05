@@ -5,18 +5,47 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>CRT Ambience</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            /* Dark mode styles */
+            body {
+                background-color: #1a202c;
+                color: #fff;
+            }
+            input,
+            select,
+            button {
+                background-color: #2d3748;
+                color: #fff;
+                border-color: #4a5568;
+            }
+            input:focus,
+            select:focus,
+            button:focus {
+                outline: none;
+                ring: 2px solid #63b3ed;
+            }
+            .bg-white {
+                background-color: #2d3748;
+            }
+            .text-gray-800 {
+                color: #fff;
+            }
+            .hover\:bg-blue-600:hover {
+                background-color: #3182ce;
+            }
+            .hover\:bg-red-600:hover {
+                background-color: #e53e3e;
+            }
+        </style>
     </head>
-    <body class="bg-gray-100">
+    <body>
         <div class="max-w-lg mx-auto px-4 py-8">
             <h1 class="text-3xl font-bold mb-8 text-center">
                 CRT Ambience - File Upload
             </h1>
-
             <form id="uploadForm" class="mb-8">
                 <div class="mb-4">
-                    <label
-                        for="fileInput"
-                        class="block mb-2 font-bold text-gray-700"
+                    <label for="fileInput" class="block mb-2 font-bold"
                         >Select Video File</label
                     >
                     <div class="relative">
@@ -25,13 +54,13 @@
                             spellcheck="false"
                             type="text"
                             id="fileNameInput"
-                            class="w-full px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="w-full px-4 py-2 pr-10 rounded-md focus:ring-2 focus:ring-blue-500"
                             placeholder="Choose file..."
                         />
                         <button
                             type="button"
                             id="browseButton"
-                            class="absolute top-0 right-0 px-4 py-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            class="absolute top-0 right-0 px-4 py-2 bg-blue-500 text-white rounded-r-md focus:ring-2 focus:ring-blue-500"
                         >
                             Browse
                         </button>
@@ -39,7 +68,7 @@
                 </div>
                 <button
                     type="submit"
-                    class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full bg-blue-500 text-white py-2 px-4 rounded-md focus:ring-2 focus:ring-blue-500"
                 >
                     Upload
                 </button>
@@ -47,25 +76,30 @@
 
             <div class="mb-8">
                 <h2 class="text-2xl font-bold mb-4">Available Videos</h2>
-                <ul id="videoList" class="space-y-4"></ul>
+                <ul
+                    id="videoList"
+                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
+                ></ul>
             </div>
 
             <div class="mb-8">
                 <h2 class="text-2xl font-bold mb-4">Video Options</h2>
-                <div class="flex items-center">
-                    <label class="flex items-center mr-4">
+                <div
+                    class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4"
+                >
+                    <label class="flex items-center">
                         <input
                             type="number"
                             id="gain"
-                            class="form-input w-20 px-2 py-1 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                            class="form-input w-20 px-2 py-1 rounded-md focus:ring-blue-500"
                             value="0"
                         />
-                        <span class="ml-2 text-gray-700">Gain</span>
+                        <span class="ml-2">Gain</span>
                     </label>
                     <label class="flex items-center">
                         <select
                             id="visualizer"
-                            class="form-select block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none"
+                            class="form-select block w-full px-3 py-1.5 text-base font-normal bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:ring-blue-500"
                         >
                             <option value="none" selected>None</option>
                             <option value="scope">Scope</option>
@@ -73,7 +107,7 @@
                             <option value="spectrometer">Spectrometer</option>
                             <option value="vuMeter">VU Meter</option>
                         </select>
-                        <span class="ml-2 text-gray-700">Visualizer</span>
+                        <span class="ml-2">Visualizer</span>
                     </label>
                 </div>
             </div>
@@ -82,7 +116,7 @@
                 <h2 class="text-2xl font-bold mb-4">Controls</h2>
                 <button
                     id="stopButton"
-                    class="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    class="w-full bg-red-500 text-white py-2 px-4 rounded-md focus:ring-2 focus:ring-red-500"
                 >
                     Stop Video
                 </button>
@@ -97,10 +131,14 @@
             const fileNameInput = $("#fileNameInput");
             const videoList = $("#videoList");
 
-            const getSettings = () => ({
-                gain: parseFloat($("#gain").value),
-                visualizer: $("#visualizer").value,
-            });
+            function getSettings() {
+                const visualizer = $("#visualizer").value;
+
+                return {
+                    gain: parseFloat($("#gain").value),
+                    visualizer: visualizer === "none" ? undefined : visualizer,
+                };
+            }
 
             async function fetchVideos() {
                 const response = await fetch("/videos");
@@ -112,14 +150,19 @@
                 videoList.innerHTML = videos
                     .map(
                         (video) => `
-              <li class="flex items-center justify-between bg-white p-4 rounded-md shadow">
-                <span class="text-gray-800">${video.name}</span>
-                <div>
-                  <button class="video-button bg-blue-500 text-white py-1 px-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2" data-video="${video.name}">Play</button>
-                  <button class="delete-button bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
-                </div>
-              </li>
-            `,
+                    <li class="bg-white rounded-md shadow overflow-hidden">
+                      <div class="relative">
+                        <img src="/thumbs/${video.name_without_ext}.jpg" alt="${video.name} thumbnail" class="w-full h-48 object-cover">
+                        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                          <span class="block text-white font-bold truncate">${video.name}</span>
+                        </div>
+                      </div>
+                      <div class="flex divide-x divide-gray-200">
+                        <button class="video-button w-1/2 py-2 bg-blue-500 text-white text-sm uppercase tracking-wider focus:ring-2 focus:ring-blue-500" data-video="${video.name}">Play</button>
+                        <button class="delete-button w-1/2 py-2 bg-red-500 text-white text-sm uppercase tracking-wider focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
+                      </div>
+                    </li>
+                  `,
                     )
                     .join("");
             }

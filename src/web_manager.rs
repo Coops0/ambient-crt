@@ -23,7 +23,12 @@ use tokio::{
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 use tokio_util::io::StreamReader;
 
-use crate::{video_path, vlc_manager::ThreadMessage, VIDEO_PATH};
+use crate::{
+    thumbnails::{generate_thumbnail, thumbnail_path},
+    video_path,
+    vlc_manager::ThreadMessage,
+    VIDEO_PATH,
+};
 
 pub fn manager_router() -> Router<Sender<ThreadMessage>> {
     Router::new()
@@ -54,6 +59,8 @@ async fn file_upload(
     let path = stream_to_file(&file_name, request.into_body().into_data_stream()).await?;
 
     println!("uploaded file to {path:?}");
+
+    let _ = generate_thumbnail(&path).await?;
 
     let path_string = path
         .to_str()
@@ -102,7 +109,10 @@ async fn stop_video(State(video_sender): State<Sender<ThreadMessage>>) -> Result
 }
 
 async fn delete_video(Json(FileName { file_name }): Json<FileName>) -> Result<(), AppError> {
-    fs::remove_file(video_path(&file_name))
+    let video_path = video_path(&file_name);
+    let _ = fs::remove_file(thumbnail_path(&video_path)).await;
+
+    fs::remove_file(video_path)
         .await
         .map_err(|e| anyhow!("failed to delete video -> {e:?}").into())
 }
@@ -111,6 +121,7 @@ async fn delete_video(Json(FileName { file_name }): Json<FileName>) -> Result<()
 struct VideoInfo {
     size: u64,
     name: String,
+    name_without_ext: String,
 }
 
 async fn videos() -> Result<Json<Vec<VideoInfo>>, AppError> {
@@ -129,8 +140,19 @@ async fn videos() -> Result<Json<Vec<VideoInfo>>, AppError> {
                 return Ok(None);
             };
 
+            let name_without_ext = entry
+                .path()
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+
             let size = metadata.len();
-            Ok(Some(VideoInfo { size, name }))
+            Ok(Some(VideoInfo {
+                size,
+                name,
+                name_without_ext,
+            }))
         })
         .collect::<Result<Vec<VideoInfo>, std::io::Error>>()
         .await?;
