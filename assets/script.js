@@ -51,12 +51,12 @@ async function fetchVideos() {
       (video) => `
            <li class="video-item bg-black border-2 border-purple-500 rounded-md shadow overflow-hidden" data-video="${video.name}">
              <div class="relative">
-               <img src="/thumbs/${video.name_without_ext}.jpg" alt="${video.name} thumbnail" class="w-full h-48 object-cover">
+               <img src="/thumbs/${video.name_without_ext}.jpg" alt="${video.name}" class="w-full h-48 object-cover">
                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
                  <span class="block text-purple-500 font-bold truncate">${video.name}</span>
                </div>
              </div>
-             <div class="flex divide-x-2 divide-purple-500">
+             <div class="flex divide-x-2 divide-purple-500 transition-all">
                <button class="video-button w-1/2 py-2 bg-green-500 hover:bg-green-600 text-black text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-green-500">Play</button>
                <button class="delete-button w-1/2 py-2 bg-red-500 hover:bg-red-600 text-black text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-red-500">Delete</button>
              </div>

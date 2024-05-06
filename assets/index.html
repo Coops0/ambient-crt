@@ -12,14 +12,17 @@
         />
         <script src="/script" defer></script>
     </head>
-    <body class="bg-gray-900 text-purple-500">
+    <body class="bg-gray-900 text-purple-500 crt">
         <div class="max-w-7xl mx-auto px-4 py-8">
-            <h1 class="text-6xl font-bold mb-12 text-center">television</h1>
+            <h1 class="text-4xl sm:text-6xl font-bold mb-8 text-center">
+                television
+            </h1>
+
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-1">
                     <form
                         id="uploadForm"
-                        class="mb-8 border-2 border-purple-500 p-6 rounded-md"
+                        class="mb-8 border-2 border-purple-500 p-4 rounded-md"
                     >
                         <div class="mb-4">
                             <div class="relative">
@@ -32,13 +35,13 @@
                                     spellcheck="false"
                                     type="text"
                                     id="fileNameInput"
-                                    class="w-full bg-black text-purple-500 px-4 py-3 pr-12 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                                    class="w-full bg-black text-purple-500 px-4 py-3 pr-20 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                                     placeholder="file"
                                 />
                                 <button
                                     type="button"
                                     id="browseButton"
-                                    class="absolute top-0 right-0 px-6 py-3 bg-purple-500 hover:bg-purple-600 text-black rounded-r-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                                    class="absolute top-0 right-0 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-black rounded-r-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
                                 >
                                     choose
                                 </button>
@@ -46,29 +49,35 @@
                         </div>
                         <button
                             type="submit"
-                            class="w-full bg-purple-500 hover:bg-purple-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                            class="w-full bg-purple-500 hover:bg-purple-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                         >
                             upload
                         </button>
                     </form>
 
-                    <div class="mb-8 border-2 border-purple-500 p-6 rounded-md">
-                        <h2 class="text-3xl font-bold mb-6">video options</h2>
-                        <div class="flex flex-row gap-4 items-center">
+                    <div class="mb-8 border-2 border-purple-500 p-4 rounded-md">
+                        <h2 class="text-2xl sm:text-3xl font-bold mb-4">
+                            video options
+                        </h2>
+                        <div class="flex flex-row gap-4">
                             <label class="flex items-center">
-                                <span class="mr-2 text-lg">gain</span>
+                                <span class="mr-2 text-sm sm:text-base"
+                                    >gain</span
+                                >
                                 <input
                                     type="number"
                                     id="gain"
-                                    class="form-input w-24 px-3 py-2 bg-black text-purple-500 rounded-md focus:outline-none focus:ring-purple-500 text-lg"
+                                    class="form-input w-20 px-2 py-1 bg-black text-purple-500 rounded-md focus:outline-none focus:ring-purple-500 text-sm sm:text-base"
                                     value="0"
                                 />
                             </label>
-                            <label class="flex items-center w-full">
-                                <span class="mr-2 text-lg">visualizer</span>
+                            <label class="flex items-center">
+                                <span class="mr-2 text-sm sm:text-base"
+                                    >visualizer</span
+                                >
                                 <select
                                     id="visualizer"
-                                    class="w-full form-select block px-4 py-3 text-lg font-normal bg-black text-purple-500 bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:outline-none focus:ring-purple-500"
+                                    class="w-full form-select block px-2 py-2 text-sm sm:text-base font-normal bg-black text-purple-500 bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:outline-none focus:ring-purple-500"
                                 >
                                     <option value="none" selected>
                                         disabled
@@ -84,26 +93,26 @@
                         </div>
                     </div>
 
-                    <div class="mb-8 border-2 border-purple-500 p-6 rounded-md">
-                        <h2 class="text-3xl font-bold mb-6">controls</h2>
-                        <div class="flex flex-row gap-4">
+                    <div class="mb-8 border-2 border-purple-500 p-4 rounded-md">
+                        <h2 class="text-2xl sm:text-3xl font-bold mb-4">
+                            controls
+                        </h2>
+                        <div class="flex flex-row md:flex-col gap-4">
                             <button
                                 id="stopButton"
-                                class="w-full bg-red-500 hover:bg-red-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-lg"
+                                class="w-full bg-red-500 hover:bg-red-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
                             >
                                 stop
                             </button>
-
                             <button
                                 id="randomButton"
-                                class="w-full bg-purple-500 hover:bg-purple-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                                class="w-full bg-purple-500 hover:bg-purple-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                             >
                                 random video
                             </button>
-
                             <button
                                 id="shuffleButton"
-                                class="w-full bg-blue-500 hover:bg-blue-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                                class="w-full bg-blue-500 hover:bg-blue-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                             >
                                 shuffle all vids
                             </button>
@@ -111,13 +120,15 @@
                     </div>
                 </div>
 
-                <div>
-                    <div class="mb-8 border-2 border-purple-500 p-6 rounded-md">
-                        <h2 class="text-3xl font-bold mb-6">playlists</h2>
+                <div class="lg:col-span-2">
+                    <div class="mb-8 border-2 border-purple-500 p-4 rounded-md">
+                        <h2 class="text-2xl sm:text-3xl font-bold mb-4">
+                            playlists
+                        </h2>
                         <div class="mb-4">
                             <select
                                 id="playlist"
-                                class="w-full form-select block px-4 py-3 text-lg font-normal bg-black text-purple-500 bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:outline-none focus:ring-purple-500"
+                                class="w-full form-select block px-4 py-3 text-sm sm:text-base font-normal bg-black text-purple-500 bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:outline-none focus:ring-purple-500"
                             >
                                 <option value="none">select playlist</option>
                                 <option value="new">new</option>
@@ -125,48 +136,50 @@
                         </div>
                         <div
                             id="newPlaylistSection"
-                            class="mb-4 flex flex-row gap-4 hidden"
+                            class="mb-4 flex flex-col sm:flex-row gap-4 hidden"
                         >
                             <input
                                 type="text"
                                 id="newPlaylistName"
-                                class="w-full bg-black text-purple-500 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                                class="w-full bg-black text-purple-500 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                                 placeholder="name"
                             />
                             <button
                                 id="savePlaylistButton"
-                                class="bg-purple-500 hover:bg-purple-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-lg"
+                                class="bg-purple-500 hover:bg-purple-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                             >
                                 save
                             </button>
                         </div>
                         <div
-                            class="flex flex-row gap-4 hidden"
+                            class="flex flex-col sm:flex-row gap-4 hidden"
                             id="playlistActions"
                         >
                             <button
                                 id="playPlaylistButton"
-                                class="w-full bg-green-500 hover:bg-green-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-lg"
+                                class="w-full bg-green-500 hover:bg-green-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
                             >
                                 play
                             </button>
                             <button
                                 id="deselectButton"
-                                class="w-full bg-red-500 hover:bg-red-600 text-black py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-lg"
+                                class="w-full bg-red-500 hover:bg-red-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 text-sm sm:text-base"
                             >
                                 deselect
                             </button>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="mt-12 border-2 border-purple-500 p-6 rounded-md">
-                <h2 class="text-4xl font-bold mb-8">videos</h2>
-                <ul
-                    id="videoList"
-                    class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-8"
-                ></ul>
+                    <div class="border-2 border-purple-500 p-4 rounded-md">
+                        <h2 class="text-3xl sm:text-4xl font-bold mb-4">
+                            videos
+                        </h2>
+                        <ul
+                            id="videoList"
+                            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                        ></ul>
+                    </div>
+                </div>
             </div>
         </div>
     </body>
