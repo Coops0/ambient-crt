@@ -268,20 +268,18 @@
                 }
             });
 
-            async function playRandomVideo() {
+            $("#randomButton").addEventListener("click", async () => {
                 const response = await fetch("/videos");
                 if (!response.ok) {
                     return console.error("Failed to fetch videos", response);
                 }
 
                 const videos = await response.json();
-                const randomIndex = Math.floor(Math.random() * videos.length);
-                const randomVideo = videos[randomIndex];
+                const randomVideo =
+                    videos[Math.floor(Math.random() * videos.length)];
 
                 playVideo(randomVideo.name);
-            }
-
-            $("#randomButton").addEventListener("click", playRandomVideo);
+            });
 
             $("#stopButton").addEventListener("click", stopVideo);
 
