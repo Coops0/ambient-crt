@@ -6,91 +6,67 @@
         <title>CRT Ambience</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
-            /* Dark mode styles */
             body {
-                background-color: #1a202c;
-                color: #fff;
-            }
-            input,
-            select,
-            button {
-                background-color: #2d3748;
-                color: #fff;
-                border-color: #4a5568;
-            }
-            input:focus,
-            select:focus,
-            button:focus {
-                outline: none;
-                ring: 2px solid #63b3ed;
-            }
-            .bg-white {
-                background-color: #2d3748;
-            }
-            .text-gray-800 {
-                color: #fff;
-            }
-            .hover\:bg-blue-600:hover {
-                background-color: #3182ce;
-            }
-            .hover\:bg-red-600:hover {
-                background-color: #e53e3e;
+                background-color: #1c1c1c;
+                font-family: "VT323", monospace;
             }
         </style>
+        <link
+            href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+            rel="stylesheet"
+        />
     </head>
-    <body>
+    <body class="bg-gray-900 text-purple-500">
         <div class="max-w-lg mx-auto px-4 py-8">
-            <h1 class="text-3xl font-bold mb-8 text-center">
-                CRT Ambience - File Upload
-            </h1>
-            <form id="uploadForm" class="mb-8">
+            <h1 class="text-4xl font-bold mb-8 text-center">crt</h1>
+            <form
+                id="uploadForm"
+                class="mb-8 border-2 border-purple-500 p-4 rounded-md"
+            >
                 <div class="mb-4">
-                    <label for="fileInput" class="block mb-2 font-bold"
-                        >Select Video File</label
-                    >
                     <div class="relative">
                         <input type="file" id="fileInput" class="hidden" />
                         <input
                             spellcheck="false"
                             type="text"
                             id="fileNameInput"
-                            class="w-full px-4 py-2 pr-10 rounded-md focus:ring-2 focus:ring-blue-500"
-                            placeholder="Choose file..."
+                            class="w-full bg-black text-purple-500 px-4 py-2 pr-10 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="file"
                         />
                         <button
                             type="button"
                             id="browseButton"
-                            class="absolute top-0 right-0 px-4 py-2 bg-blue-500 text-white rounded-r-md focus:ring-2 focus:ring-blue-500"
+                            class="absolute top-0 right-0 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-black rounded-r-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
-                            Browse
+                            choose
                         </button>
                     </div>
                 </div>
                 <button
                     type="submit"
-                    class="w-full bg-blue-500 text-white py-2 px-4 rounded-md focus:ring-2 focus:ring-blue-500"
+                    class="w-full bg-purple-500 hover:bg-purple-600 text-black py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                    Upload
+                    upload
                 </button>
             </form>
 
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold mb-4">Video Options</h2>
-                <div class="flex flex-row items-center space-x-4">
-                    <label class="flex items-center mb-0">
-                        <span class="mr-2">Gain</span>
+            <div class="mb-8 border-2 border-purple-500 p-4 rounded-md">
+                <h2 class="text-2xl font-bold mb-4">video opts</h2>
+                <div class="flex flex-row gap-2">
+                    <label class="flex items-center">
+                        <span class="mr-2">gain</span>
                         <input
                             type="number"
                             id="gain"
-                            class="form-input w-20 px-2 py-1 rounded-md focus:ring-blue-500"
+                            class="form-input w-20 px-2 py-1 bg-black text-purple-500 rounded-md focus:outline-none focus:ring-purple-500"
                             value="0"
                         />
                     </label>
-                    <label class="flex items-center">
-                        <span class="mr-2">Visualizer</span>
+                    <label class="flex items-center w-full">
+                        <span class="mr-2">visualizer</span>
                         <select
                             id="visualizer"
-                            class="form-select block w-full px-3 py-1.5 text-base font-normal bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:ring-blue-500"
+                            class="w-full form-select block w-full px-3 py-1.5 text-base font-normal bg-black text-purple-500 bg-clip-padding bg-no-repeat rounded transition ease-in-out m-0 focus:outline-none focus:ring-purple-500"
                         >
                             <option value="none" selected>None</option>
                             <option value="scope">Scope</option>
@@ -102,27 +78,27 @@
                 </div>
             </div>
 
-            <div>
-                <h2 class="text-2xl font-bold mb-4">Controls</h2>
+            <div class="mb-8 border-2 border-purple-500 p-4 rounded-md">
+                <h2 class="text-2xl font-bold mb-4">controls</h2>
                 <div class="flex flex-row gap-2">
                     <button
                         id="stopButton"
-                        class="w-full bg-red-500 text-white py-2 px-4 rounded-md focus:ring-2 focus:ring-red-500"
+                        class="w-full bg-red-500 hover:bg-red-600 text-black py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     >
-                        Stop Video
+                        stop
                     </button>
 
                     <button
                         id="randomButton"
-                        class="w-full bg-green-500 text-white py-2 px-4 rounded-md focus:ring-2 focus:ring-green-500"
+                        class="w-full bg-purple-500 hover:bg-purple-600 text-black py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
-                        Play Random Video
+                        random video
                     </button>
                 </div>
             </div>
 
-            <div class="mt-8">
-                <h2 class="text-2xl font-bold mb-4">Available Videos</h2>
+            <div class="mt-8 border-2 border-purple-500 p-4 rounded-md">
+                <h2 class="text-2xl font-bold mb-4">videos</h2>
                 <ul
                     id="videoList"
                     class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
@@ -157,19 +133,19 @@
                 videoList.innerHTML = videos
                     .map(
                         (video) => `
-                    <li class="bg-white rounded-md shadow overflow-hidden">
-                      <div class="relative">
-                        <img src="/thumbs/${video.name_without_ext}.jpg" alt="${video.name} thumbnail" class="w-full h-48 object-cover">
-                        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                          <span class="block text-white font-bold truncate">${video.name}</span>
-                        </div>
-                      </div>
-                      <div class="flex divide-x divide-gray-200">
-                        <button class="video-button w-1/2 py-2 bg-blue-500 text-white text-sm uppercase tracking-wider focus:ring-2 focus:ring-blue-500" data-video="${video.name}">Play</button>
-                        <button class="delete-button w-1/2 py-2 bg-red-500 text-white text-sm uppercase tracking-wider focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
-                      </div>
-                    </li>
-                  `,
+                            <li class="bg-black border-2 border-purple-500 rounded-md shadow overflow-hidden">
+                              <div class="relative">
+                                <img src="/thumbs/${video.name_without_ext}.jpg" alt="${video.name} thumbnail" class="w-full h-48 object-cover">
+                                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                                  <span class="block text-purple-500 font-bold truncate">${video.name}</span>
+                                </div>
+                              </div>
+                              <div class="flex divide-x-2 divide-purple-500">
+                                <button class="video-button w-1/2 py-2 bg-green-500 hover:bg-green-600 text-black text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-green-500" data-video="${video.name}">Play</button>
+                                <button class="delete-button w-1/2 py-2 bg-red-500 hover:bg-red-600 text-black text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-red-500" data-video="${video.name}">Delete</button>
+                              </div>
+                            </li>
+                          `,
                     )
                     .join("");
             }
