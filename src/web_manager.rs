@@ -1,34 +1,23 @@
-use std::{
-    fmt::format,
-    io,
-    path::{Path, PathBuf},
-    sync::mpsc::Sender,
-};
+use std::{path::Path, sync::mpsc::Sender};
 
-use ::futures::pin_mut;
 use anyhow::{anyhow, Context};
 use axum::{
-    body::Bytes,
     extract::{Query, Request, State},
-    http::StatusCode,
-    response::{Html, IntoResponse},
+    response::Html,
     routing::get,
-    BoxError, Json, Router,
+    Json, Router,
 };
-use futures_util::{Stream, TryStreamExt};
+use futures_util::TryStreamExt;
 use serde::{Deserialize, Serialize};
-use tokio::{
-    fs::{self, File},
-    io::BufWriter,
-};
+use tokio::fs;
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
-use tokio_util::io::StreamReader;
 
 use crate::{
     playlist::{self, Playlist},
     thumbnails::{generate_thumbnail, thumbnail_path},
     video_path,
     vlc_manager::ThreadMessage,
+    web_util::{stream_to_file, AppError},
     VIDEO_PATH,
 };
 
@@ -114,6 +103,15 @@ async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> Result
     let video_path = video_path(&video_name);
     let _ = fs::remove_file(thumbnail_path(&video_path)).await;
 
+    for mut playlist in playlist::playlists().await?.into_iter() {
+        if !playlist.videos.iter().any(|v| *v == video_path) {
+            continue;
+        }
+
+        playlist.videos.retain(|v| v != &video_path);
+        let _ = playlist::write_playlist(&playlist).await;
+    }
+
     fs::remove_file(video_path)
         .await
         .map_err(|e| anyhow!("failed to delete video -> {e:?}").into())
@@ -193,16 +191,17 @@ async fn playlists() -> Result<Json<Vec<PlaylistResponse>>, AppError> {
     Ok(Json(files))
 }
 
+#[inline]
+fn playlist_name_to_file(name: &str) -> String {
+    format!("{}.vlc", name.replace(' ', "_"))
+}
+
 #[derive(Deserialize)]
 struct SavePlaylist {
     // e.x. 'frank ocean'
     playlist_name: String,
     // e.x. ['frank_ocean.mp4']
     videos: Vec<String>,
-}
-
-fn playlist_name_to_file(name: &str) -> String {
-    format!("{}.vlc", name.replace(' ', "_"))
 }
 
 async fn save_playlist(
@@ -262,49 +261,4 @@ async fn play_playlist(
             shuffle: true,
         })
         .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
-}
-
-async fn stream_to_file<S, E>(path: &str, stream: S) -> anyhow::Result<PathBuf>
-where
-    S: Stream<Item = Result<Bytes, E>> + Send,
-    E: Into<BoxError>,
-{
-    let path = video_path(path);
-
-    let mut file = BufWriter::new(
-        File::create(&path)
-            .await
-            .map_err(|_| anyhow!("failed to create file {path:?}"))?,
-    );
-
-    let body_with_io_error = stream.map_err(|err| io::Error::new(io::ErrorKind::Other, err));
-    let body_reader = StreamReader::new(body_with_io_error);
-    pin_mut!(body_reader);
-
-    tokio::io::copy(&mut body_reader, &mut file)
-        .await
-        .context("failed to copy body to file")?;
-
-    Ok(path)
-}
-
-struct AppError(anyhow::Error);
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> axum::response::Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Something went wrong: {}", self.0),
-        )
-            .into_response()
-    }
-}
-
-impl<E> From<E> for AppError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        Self(err.into())
-    }
 }

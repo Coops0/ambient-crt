@@ -2,6 +2,7 @@ mod playlist;
 mod thumbnails;
 mod vlc_manager;
 mod web_manager;
+mod web_util;
 
 use std::path::{Path, PathBuf};
 
