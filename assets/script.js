@@ -238,7 +238,7 @@ $("#savePlaylistButton").addEventListener("click", async () => {
 
   await savePlaylist(playlistName, videos);
   await fetchPlaylists();
-  $("#playlist").value = playlistName.replaceAll(" ", "_");
+  $("#playlist").value = playlistName.replaceAll("_", " ");
 });
 
 $("#deselectButton").addEventListener("click", () =>
