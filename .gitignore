@@ -7,3 +7,4 @@ flags.txt
 build.sh
 .cargo/config.toml
 /thumbs
+/playlists

@@ -11,9 +11,10 @@ use crate::FLAGS;
 pub enum ThreadMessage {
     StopVideo,
     ChangeVideo {
-        path: PathBuf,
+        file_path: PathBuf,
         gain: f32,
         visualizer: Option<String>,
+        shuffle: bool,
     },
 }
 
@@ -35,12 +36,13 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
 
         match msg {
             ThreadMessage::ChangeVideo {
-                path,
+                file_path: path,
                 gain,
                 visualizer,
+                shuffle,
             } => {
                 let vlc_instance =
-                    play_video(&path, gain, &visualizer).expect("failed to play video");
+                    play_video(&path, gain, &visualizer, shuffle).expect("failed to play video");
 
                 current_vlc_instance = Some(vlc_instance);
             }
@@ -51,7 +53,12 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
     }
 }
 
-fn play_video(path: &PathBuf, gain: f32, visualizer: &Option<String>) -> anyhow::Result<Child> {
+fn play_video(
+    path: &PathBuf,
+    gain: f32,
+    visualizer: &Option<String>,
+    shuffle: bool,
+) -> anyhow::Result<Child> {
     let mut vlc_builder = Command::new("vlc");
 
     for flag in unsafe { FLAGS.get_unchecked() } {
@@ -64,6 +71,10 @@ fn play_video(path: &PathBuf, gain: f32, visualizer: &Option<String>) -> anyhow:
         vlc_builder
             .arg("--audio-visual=visual")
             .arg(format!("--effect-list={vis}"));
+    }
+
+    if shuffle {
+        vlc_builder.arg("--random");
     }
 
     vlc_builder

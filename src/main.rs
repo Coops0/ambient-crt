@@ -1,3 +1,4 @@
+mod playlist;
 mod thumbnails;
 mod vlc_manager;
 mod web_manager;
@@ -17,6 +18,8 @@ use crate::thumbnails::generate_new_thumbs;
 
 pub const VIDEO_PATH: &str = "uploads/";
 pub const THUMB_PATH: &str = "thumbs/";
+pub const PLAYLIST_PATH: &str = "playlists/";
+
 const DEFAULT_FLAGS: &[&str] = &[
     "--fullscreen",
     "--loop",
@@ -33,8 +36,9 @@ pub static FLAGS: OnceCell<Vec<String>> = OnceCell::new();
 
 #[tokio::main]
 async fn main() {
-    let _ = fs::create_dir(VIDEO_PATH).await;
-    let _ = fs::create_dir(THUMB_PATH).await;
+    for path in &[VIDEO_PATH, THUMB_PATH, PLAYLIST_PATH] {
+        let _ = fs::create_dir(path).await;
+    }
 
     let _ = generate_new_thumbs().await;
 
@@ -55,6 +59,7 @@ async fn main() {
 
     let app = manager_router()
         .nest_service("/thumbs", ServeDir::new(THUMB_PATH))
+        .nest_service("/assets", ServeDir::new("assets"))
         .with_state(launch_vlc_thread());
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
