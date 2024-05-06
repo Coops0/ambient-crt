@@ -125,9 +125,7 @@ struct VideoInfo {
 }
 
 async fn videos() -> Result<Json<Vec<VideoInfo>>, AppError> {
-    let path = Path::new(VIDEO_PATH);
-
-    let files = ReadDirStream::new(fs::read_dir(path).await?)
+    let files = ReadDirStream::new(fs::read_dir(VIDEO_PATH).await?)
         .into_stream()
         .try_filter_map(|entry| async move {
             let file_type = entry.file_type().await?;

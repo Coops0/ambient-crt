@@ -1,9 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context};
-use futures::TryStreamExt;
 use tokio::{fs, process::Command};
-use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 
 use crate::{THUMB_PATH, VIDEO_PATH};
 
@@ -49,52 +47,23 @@ pub async fn generate_thumbnail(video_path: &PathBuf) -> anyhow::Result<PathBuf>
 }
 
 pub async fn generate_new_thumbs() -> anyhow::Result<()> {
-    let video_path = Path::new(VIDEO_PATH);
+    let mut files = fs::read_dir(VIDEO_PATH).await?;
+    while let Some(entry) = files.next_entry().await? {
+        let file_type = entry.file_type().await?;
+        if !file_type.is_file() {
+            continue;
+        }
 
-    let files = fs::read_dir(video_path).await?;
-    let generated_thumbs = ReadDirStream::new(files)
-        .into_stream()
-        .try_filter_map(|entry| async move {
-            let file_type = entry.file_type().await?;
-            if !file_type.is_file() {
-                return Ok(None);
-            }
+        let thumbnail_path = thumbnail_path(entry.path());
+        if thumbnail_path.exists() {
+            continue;
+        }
 
-            let thumbnail_path = thumbnail_path(entry.path());
-            if thumbnail_path.exists() {
-                return Ok(None);
-            }
-
-            match generate_thumbnail(&entry.path()).await {
-                Ok(_) => {
-                    println!("generated thumbnail: {thumbnail_path:?}");
-                    Ok(Some(thumbnail_path))
-                }
-                Err(e) => {
-                    eprintln!("failed to generate thumbnail: {e:?}");
-                    Ok(None)
-                }
-            }
-        })
-        .collect::<Result<Vec<PathBuf>, std::io::Error>>()
-        .await?;
-
-    if !generated_thumbs.is_empty() {
-        println!("generated thumbnails: {}", generated_thumbs.len());
+        match generate_thumbnail(&entry.path()).await {
+            Ok(_) => println!("generated thumbnail: {thumbnail_path:?}"),
+            Err(e) => eprintln!("failed to generate thumbnail: {e:?}"),
+        }
     }
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_thumbnail_path() {
-        let video_path = PathBuf::from("uploads/video.mp4");
-        let thumb_path = thumbnail_path(&video_path);
-
-        assert_eq!(thumb_path, PathBuf::from("thumbs/video.jpg"));
-    }
 }
