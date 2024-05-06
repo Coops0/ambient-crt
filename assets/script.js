@@ -28,7 +28,7 @@ async function fetchPlaylists() {
   playlistResponse.forEach(({ name, videos }) => playlists.set(name, videos));
 
   $("#playlist").innerHTML = `
-    <option value="none">~</option>
+    <option value="none">select playlist</option>
     <option value="new">new</option>
     ${playlistResponse
       .map(
@@ -193,10 +193,10 @@ $("#playlist").addEventListener("change", async (e) => {
   const playlistName = e.target.value;
 
   $("#newPlaylistName").value = "";
+  selectVideosFromPlaylist("");
 
   if (!playlistName || playlistName === "none") {
     // if deselect, deselect all and hide new playlist section
-    selectVideosFromPlaylist(""); // clear selection
     playlistUtilVisible(false);
     return;
   }
