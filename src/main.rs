@@ -6,11 +6,13 @@ mod web_util;
 
 use std::path::{Path, PathBuf};
 
+use axum::routing::get;
 use once_cell::sync::OnceCell;
 use tokio::{fs, net::TcpListener};
 use tower_http::services::ServeDir;
 use vlc_manager::launch_vlc_thread;
 use web_manager::manager_router;
+use web_util::StaticFile;
 
 use crate::thumbnails::generate_new_thumbs;
 
@@ -60,7 +62,9 @@ async fn main() {
 
     let app = manager_router()
         .nest_service("/thumbs", ServeDir::new(THUMB_PATH))
-        .nest_service("/assets", ServeDir::new("assets"))
+        .route("/", get(index))
+        .route("/styles", get(styles))
+        .route("/script", get(script))
         .with_state(launch_vlc_thread());
 
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -70,4 +74,14 @@ async fn main() {
 #[must_use]
 pub fn video_path(path: &str) -> PathBuf {
     Path::new(VIDEO_PATH).join(path)
+}
+
+async fn index() -> StaticFile<&'static str> {
+    StaticFile("index.html")
+}
+async fn styles() -> StaticFile<&'static str> {
+    StaticFile("styles.css")
+}
+async fn script() -> StaticFile<&'static str> {
+    StaticFile("script.js")
 }

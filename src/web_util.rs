@@ -2,8 +2,14 @@ use std::{io, path::PathBuf};
 
 use ::futures::pin_mut;
 use anyhow::{anyhow, Context};
-use axum::{body::Bytes, http::StatusCode, response::IntoResponse, BoxError};
+use axum::{
+    body::Bytes,
+    http::{header, StatusCode},
+    response::{IntoResponse, Response},
+    BoxError,
+};
 use futures_util::{Stream, TryStreamExt};
+use rust_embed::RustEmbed;
 use tokio::{fs::File, io::BufWriter};
 use tokio_util::io::StreamReader;
 
@@ -37,7 +43,7 @@ pub struct AppError(anyhow::Error);
 
 impl IntoResponse for AppError {
     #[inline]
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Something went wrong: {}", self.0),
@@ -53,5 +59,28 @@ where
     #[inline]
     fn from(err: E) -> Self {
         Self(err.into())
+    }
+}
+
+#[derive(RustEmbed)]
+#[folder = "assets/"]
+struct Asset;
+
+pub struct StaticFile<T>(pub T);
+
+impl<T> IntoResponse for StaticFile<T>
+where
+    T: Into<String>,
+{
+    fn into_response(self) -> Response {
+        let path = self.0.into();
+
+        match Asset::get(path.as_str()) {
+            Some(content) => {
+                let mime = mime_guess::from_path(path).first_or_octet_stream();
+                ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+            }
+            None => (StatusCode::NOT_FOUND, "404 Not Found").into_response(),
+        }
     }
 }

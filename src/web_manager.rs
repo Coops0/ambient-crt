@@ -3,7 +3,6 @@ use std::{path::Path, sync::mpsc::Sender};
 use anyhow::{anyhow, Context};
 use axum::{
     extract::{Query, Request, State},
-    response::Html,
     routing::get,
     Json, Router,
 };
@@ -23,7 +22,6 @@ use crate::{
 
 pub fn manager_router() -> Router<Sender<ThreadMessage>> {
     Router::new()
-        .route("/", get(panel))
         .route("/stop", get(stop_video))
         .route(
             "/videos",
@@ -36,10 +34,6 @@ pub fn manager_router() -> Router<Sender<ThreadMessage>> {
             "/playlists",
             get(playlists).post(save_playlist).put(play_playlist),
         )
-}
-
-async fn panel() -> Html<&'static str> {
-    Html(include_str!("../assets/index.html"))
 }
 
 #[derive(Deserialize)]

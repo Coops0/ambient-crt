@@ -10,7 +10,9 @@ anyhow = "1.0.82"
 axum = { version = "0.7.5", features = ["multipart", "macros"] }
 futures = "0.3.30"
 futures-util = "0.3.30"
+mime_guess = "2.0.4"
 once_cell = "1.19.0"
+rust-embed = { version = "8.3.0", features = ["compression"] }
 serde = { version = "1.0.200", features = ["derive"] }
 tokio = { version = "1.37.0", features = ["full"] }
 tokio-stream = { version = "0.1.15", features = ["fs"] }
