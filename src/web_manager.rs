@@ -49,11 +49,9 @@ async fn file_upload(
     request: Request,
 ) -> Result<String, AppError> {
     let path = stream_to_file(&video_name, request.into_body().into_data_stream()).await?;
-
     info!("uploaded file to '{}'", path.display());
 
     let t = generate_thumbnail(&path).await?;
-
     info!("generated thumbnail at '{}'", t.display());
 
     let path_string = path
@@ -251,6 +249,7 @@ async fn play_playlist(
     let playlist_name = match playlist_name {
         Some(name) => name,
         None => {
+            info!("shuffling all videos");
             let _ = vlc.send(VlcMessage::ChangeVideo {
                 gain,
                 visualizer,
