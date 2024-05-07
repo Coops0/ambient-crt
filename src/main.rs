@@ -6,14 +6,20 @@ mod web_manager;
 mod web_util;
 
 use std::{
+    borrow::Cow,
     fs::OpenOptions,
     path::{Path, PathBuf},
     sync::mpsc::Sender,
 };
 
-use axum::routing::get;
+use axum::{
+    http::header,
+    response::{Html, IntoResponse},
+    routing::get,
+};
 use media_keys::MediaKeyMessage;
 use once_cell::sync::OnceCell;
+use rust_embed::EmbeddedFile;
 use simplelog::{
     info, ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger,
 };
@@ -21,7 +27,7 @@ use tokio::{fs, net::TcpListener};
 use tower_http::services::ServeDir;
 use vlc_manager::{create_vlc_channel, VlcMessage};
 use web_manager::manager_router;
-use web_util::StaticFile;
+use web_util::Asset;
 
 use crate::{media_keys::create_enigo_channel, thumbnails::generate_new_thumbs};
 
@@ -54,7 +60,6 @@ async fn main() {
         //
         let log_file = OpenOptions::new()
             .create(true)
-            .write(true)
             .append(true)
             .open("ambient_crt.log")
             .unwrap();
@@ -68,28 +73,27 @@ async fn main() {
             ),
             WriteLogger::new(LevelFilter::Info, Config::default(), log_file),
         ])
-        .unwrap()
+        .unwrap();
     })
     .await
     .unwrap();
 
     for path in &[VIDEO_PATH, THUMB_PATH, PLAYLIST_PATH] {
-        let _ = fs::create_dir(path).await;
+        drop(fs::create_dir(path).await);
     }
 
     info!("checking if need to generate new thumbnails...");
     let _ = generate_new_thumbs().await;
 
-    let flags: Vec<String> = match fs::read_to_string("flags.txt").await {
-        Ok(flag_file) => flag_file
+    let flags: Vec<String> = if let Ok(flag_file) = fs::read_to_string("flags.txt").await {
+        flag_file
             .lines()
             .map(|line| line.trim().to_string())
             .filter(|line| !line.is_empty())
-            .collect(),
-        _ => {
-            let _ = fs::write("flags.txt", DEFAULT_FLAGS.join("\n")).await;
-            DEFAULT_FLAGS.iter().map(ToString::to_string).collect()
-        }
+            .collect()
+    } else {
+        let _ = fs::write("flags.txt", DEFAULT_FLAGS.join("\n")).await;
+        DEFAULT_FLAGS.iter().map(ToString::to_string).collect()
     };
 
     info!("loaded {} flags", flags.len());
@@ -127,12 +131,18 @@ pub fn video_path(path: &str) -> PathBuf {
     Path::new(VIDEO_PATH).join(path)
 }
 
-async fn index() -> StaticFile<&'static str> {
-    StaticFile("index.html")
+type EmbeddedData = Cow<'static, [u8]>;
+
+async fn index() -> Html<EmbeddedData> {
+    let EmbeddedFile { data, .. } = unsafe { Asset::get("index.html").unwrap_unchecked() };
+    Html(data)
 }
-async fn styles() -> StaticFile<&'static str> {
-    StaticFile("styles.css")
+async fn styles() -> impl IntoResponse {
+    let EmbeddedFile { data, .. } = unsafe { Asset::get("styles.css").unwrap_unchecked() };
+
+    ([(header::CONTENT_TYPE, "text/css")], data)
 }
-async fn script() -> StaticFile<&'static str> {
-    StaticFile("script.js")
+async fn script() -> EmbeddedData {
+    // js can have type of octet stream
+    unsafe { Asset::get("script.js").unwrap_unchecked() }.data
 }

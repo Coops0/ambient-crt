@@ -4,7 +4,7 @@ use ::futures::pin_mut;
 use anyhow::{anyhow, Context};
 use axum::{
     body::Bytes,
-    http::{header, StatusCode},
+    http::StatusCode,
     response::{IntoResponse, Response},
     BoxError,
 };
@@ -68,24 +68,4 @@ where
 
 #[derive(RustEmbed)]
 #[folder = "assets/"]
-struct Asset;
-
-pub struct StaticFile<T>(pub T);
-
-impl<T> IntoResponse for StaticFile<T>
-where
-    T: Into<String>,
-{
-    fn into_response(self) -> Response {
-        let path = self.0.into();
-
-        match Asset::get(path.as_str()) {
-            Some(content) => {
-                let mime = mime_guess::from_path(path).first_or_octet_stream();
-                ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
-            }
-            // this shouldn't happen
-            None => (StatusCode::INTERNAL_SERVER_ERROR, "FILE WAS NOT FOUND???").into_response(),
-        }
-    }
-}
+pub struct Asset;

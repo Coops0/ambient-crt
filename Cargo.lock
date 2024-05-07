@@ -32,7 +32,6 @@ dependencies = [
  "enigo",
  "futures",
  "futures-util",
- "mime_guess",
  "once_cell",
  "rust-embed",
  "serde",

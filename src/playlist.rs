@@ -20,8 +20,8 @@ pub struct Playlist {
 }
 
 impl Playlist {
-    pub fn new(name: String, videos: Vec<String>) -> Self {
-        let path = playlist_path(&name);
+    pub fn new(name: &str, videos: Vec<String>) -> Self {
+        let path = playlist_path(name);
         Self {
             videos: videos.into_iter().map(|f| video_path(&f)).collect(),
             path,

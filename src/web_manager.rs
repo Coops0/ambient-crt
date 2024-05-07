@@ -106,7 +106,7 @@ async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> Result
 
     info!("deleting video '{}'", video_path.display());
 
-    for mut playlist in playlist::playlists().await?.into_iter() {
+    for mut playlist in playlist::playlists().await? {
         if !playlist.videos.iter().any(|v| *v == video_path) {
             continue;
         }
@@ -218,7 +218,7 @@ async fn save_playlist(
     let processed_name = playlist_name_to_file(&playlist_name);
     let video_length = videos.len();
 
-    let playlist = Playlist::new(processed_name, videos);
+    let playlist = Playlist::new(&processed_name, videos);
 
     info!(
         "saved playlist '{}' with {video_length} videos",
@@ -246,19 +246,16 @@ async fn play_playlist(
         visualizer,
     }): Json<PlayPlaylist>,
 ) -> Result<(), AppError> {
-    let playlist_name = match playlist_name {
-        Some(name) => name,
-        None => {
-            info!("shuffling all videos");
-            let _ = vlc.send(VlcMessage::ChangeVideo {
-                gain,
-                visualizer,
-                file_path: Path::new(VIDEO_PATH).to_owned(),
-                shuffle: true,
-            });
+    let Some(playlist_name) = playlist_name else {
+        info!("shuffling all videos");
+        let _ = vlc.send(VlcMessage::ChangeVideo {
+            gain,
+            visualizer,
+            file_path: Path::new(VIDEO_PATH).to_owned(),
+            shuffle: true,
+        });
 
-            return Ok(());
-        }
+        return Ok(());
     };
 
     let file_path = playlist::playlist_path(&playlist_name_to_file(&playlist_name));
