@@ -49,7 +49,7 @@ async function fetchVideos() {
   videoList.innerHTML = videos
     .map(
       (video) => `
-             <li class="video-item bg-black border-2 border-purple-500 rounded-md shadow overflow-hidden relative" data-video="${video.name}">
+             <li class="video-item bg-black rounded-md shadow overflow-hidden relative" data-video="${video.name}">
                <div class="absolute top-2 left-2 z-10 video-select-parent hidden">
                  <label class="inline-flex items-center">
                    <input type="checkbox" class="video-select form-checkbox h-5 w-5 appearance-none border-2 border-purple-500 rounded-none bg-black checked:bg-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-200">
@@ -59,7 +59,7 @@ async function fetchVideos() {
                  <img src="/thumbs/${video.name_without_ext}.jpg" alt="${video.name}" class="w-full h-48 object-cover">
                  <div class="video-name absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-70 text-purple-500 text-sm truncate">${video.name}</div>
                </div>
-               <div class="flex divide-x-2 divide-purple-500 transition-all">
+               <div class="flex divide-x-2 transition-all">
                  <button class="video-button w-1/2 py-2 bg-green-500 hover:bg-green-600 text-black text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-green-500">Play</button>
                  <button class="delete-button w-1/2 py-2 bg-red-500 hover:bg-red-600 text-black text-sm uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-red-500">Delete</button>
                </div>
@@ -197,16 +197,17 @@ $("#playlist").addEventListener("change", async (e) => {
 
   if (!playlistName || playlistName === "none") {
     // if deselect, deselect all and hide new playlist section
-    playlistUtilVisible(false);
-    return;
+    return playlistUtilVisible(false);
   }
 
   playlistUtilVisible(true);
-  if (playlistName !== "new") {
-    // existing, select and set name in case of changes
-    $("#newPlaylistName").value = playlistName.replaceAll("_", " ");
-    selectVideosFromPlaylist(playlistName);
+  if (playlistName === "new") {
+    return;
   }
+
+  // existing playlist, select and set name in case of changes
+  $("#newPlaylistName").value = playlistName.replaceAll("_", " ");
+  selectVideosFromPlaylist(playlistName);
 });
 
 function playlistUtilVisible(visible) {

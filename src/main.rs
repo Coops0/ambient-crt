@@ -5,7 +5,7 @@ mod web_manager;
 mod web_util;
 
 use std::{
-    fs::File,
+    fs::OpenOptions,
     path::{Path, PathBuf},
 };
 
@@ -45,19 +45,29 @@ pub static FLAGS: OnceCell<Vec<String>> = OnceCell::new();
 
 #[tokio::main]
 async fn main() {
-    CombinedLogger::init(vec![
-        TermLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            TerminalMode::Mixed,
-            ColorChoice::Auto,
-        ),
-        WriteLogger::new(
-            LevelFilter::Info,
-            Config::default(),
-            File::create("ambient_crt.log").unwrap(),
-        ),
-    ])
+    tokio::task::spawn_blocking(|| {
+        // have to do this since file::create is blocking
+        // & this can't take tokio's asyncread
+        //
+        let log_file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .append(true)
+            .open("ambient_crt.log")
+            .unwrap();
+
+        CombinedLogger::init(vec![
+            TermLogger::new(
+                LevelFilter::Info,
+                Config::default(),
+                TerminalMode::Mixed,
+                ColorChoice::Auto,
+            ),
+            WriteLogger::new(LevelFilter::Info, Config::default(), log_file),
+        ])
+        .unwrap()
+    })
+    .await
     .unwrap();
 
     for path in &[VIDEO_PATH, THUMB_PATH, PLAYLIST_PATH] {
