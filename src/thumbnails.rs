@@ -22,19 +22,19 @@ pub fn thumbnail_path<P: AsRef<Path>>(video_path: P) -> PathBuf {
 pub async fn generate_thumbnail(video_path: &PathBuf) -> anyhow::Result<PathBuf> {
     let thumbnail_path = thumbnail_path(video_path);
 
-    // ffmpeg -ss 0 -i 3005.mp4 -vf "select='eq(pict_type,I)',scale=640:360,thumbnail" -frames:v 1 -qscale:v 2 output.jpg
-
     let output = Command::new("ffmpeg")
         .arg("-i")
         .arg(video_path)
-        .arg("-ss")
-        .arg("0")
         .arg("-vf")
-        .arg("select='eq(pict_type,I)',thumbnail")
-        .arg("-frames:v")
+        .arg("scale=640:360,select='eq(pict_type,I)',thumbnail")
+        .arg("-vframes")
         .arg("1")
         .arg("-qscale:v")
-        .arg("2")
+        .arg("9")
+        .arg("-pattern_type")
+        .arg("none")
+        .arg("-update")
+        .arg("1")
         .arg(&thumbnail_path)
         .output()
         .await
