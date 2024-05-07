@@ -18,7 +18,10 @@ You then, can hook this up to the old CRT through various converters and it you 
 - auto thumbnail generator
 - custom gain & visualizer options
 - automatically configured vlc with custom flag support (flag.txt)
+- log to file / stdout
+- okay web ui
+- small/fast/reliable since rust
 
 This is not secured in any way so don't expose it to the internet.
 
-![screenshot](.github_static/screenshot.png)
+![screenshot](.github/screenshot.png)
