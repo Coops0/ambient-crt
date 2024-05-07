@@ -5,7 +5,6 @@ vlc.txt
 .DS_Store
 flags.txt
 build.sh
-.cargo/config.toml
 /thumbs
 /playlists
 ambient_crt.log
