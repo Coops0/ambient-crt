@@ -8,3 +8,4 @@ build.sh
 .cargo/config.toml
 /thumbs
 /playlists
+ambient_crt.log

@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context};
+use simplelog::{error, info};
 use tokio::{fs, process::Command};
 
 use crate::{THUMB_PATH, VIDEO_PATH};
@@ -59,9 +60,10 @@ pub async fn generate_new_thumbs() -> anyhow::Result<()> {
             continue;
         }
 
+        info!("generating thumbnail for '{}'", entry.path().display());
         match generate_thumbnail(&entry.path()).await {
-            Ok(_) => println!("generated thumbnail: {thumbnail_path:?}"),
-            Err(e) => eprintln!("failed to generate thumbnail: {e:?}"),
+            Ok(_) => info!("generated thumbnail '{}'", thumbnail_path.display()),
+            Err(e) => error!("failed to generate thumbnail: {e:?}"),
         }
     }
 

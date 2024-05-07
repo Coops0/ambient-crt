@@ -10,6 +10,7 @@ use axum::{
 };
 use futures_util::{Stream, TryStreamExt};
 use rust_embed::RustEmbed;
+use simplelog::warn;
 use tokio::{fs::File, io::BufWriter};
 use tokio_util::io::StreamReader;
 
@@ -44,6 +45,9 @@ pub struct AppError(anyhow::Error);
 impl IntoResponse for AppError {
     #[inline]
     fn into_response(self) -> Response {
+        // this is dumb
+        warn!("web error captured -> {:?}", self.0);
+
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             format!("Something went wrong: {}", self.0),
@@ -80,7 +84,8 @@ where
                 let mime = mime_guess::from_path(path).first_or_octet_stream();
                 ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
             }
-            None => (StatusCode::NOT_FOUND, "404 Not Found").into_response(),
+            // this shouldn't happen
+            None => (StatusCode::INTERNAL_SERVER_ERROR, "FILE WAS NOT FOUND???").into_response(),
         }
     }
 }

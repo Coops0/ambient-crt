@@ -8,6 +8,7 @@ use axum::{
 };
 use futures_util::TryStreamExt;
 use serde::{Deserialize, Serialize};
+use simplelog::info;
 use tokio::fs;
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 
@@ -47,9 +48,11 @@ async fn file_upload(
 ) -> Result<String, AppError> {
     let path = stream_to_file(&video_name, request.into_body().into_data_stream()).await?;
 
-    println!("uploaded file to {path:?}");
+    info!("uploaded file to {}", path.display());
 
-    let _ = generate_thumbnail(&path).await?;
+    let t = generate_thumbnail(&path).await?;
+
+    info!("generated thumbnail at '{}'", t.display());
 
     let path_string = path
         .to_str()
@@ -75,9 +78,16 @@ async fn switch_video(
         visualizer,
     }): Json<SwitchVideo>,
 ) -> Result<(), AppError> {
+    let video = video_path(&video_name);
+    if !video.is_file() {
+        return Err(anyhow!("video not found").into());
+    }
+
+    info!("switching video to '{}'", video.display());
+
     video_sender
         .send(ThreadMessage::ChangeVideo {
-            file_path: video_path(&video_name),
+            file_path: video,
             gain,
             visualizer,
             shuffle: false,
@@ -97,14 +107,20 @@ async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> Result
     let video_path = video_path(&video_name);
     let _ = fs::remove_file(thumbnail_path(&video_path)).await;
 
+    info!("deleting video '{}'", video_path.display());
+
     for mut playlist in playlist::playlists().await?.into_iter() {
         if !playlist.videos.iter().any(|v| *v == video_path) {
             continue;
         }
 
+        info!("removing video from playlist '{}'", playlist.path.display());
+
         playlist.videos.retain(|v| v != &video_path);
         let _ = playlist::write_playlist(&playlist).await;
     }
+
+    info!("deleted video");
 
     fs::remove_file(video_path)
         .await
@@ -203,7 +219,14 @@ async fn save_playlist(
     }): Json<SavePlaylist>,
 ) -> Result<(), AppError> {
     let processed_name = playlist_name_to_file(&playlist_name);
+    let video_length = videos.len();
+
     let playlist = Playlist::new(processed_name, videos);
+
+    info!(
+        "saved playlist '{}' with {video_length} videos",
+        playlist_name,
+    );
 
     playlist::write_playlist(&playlist)
         .await
@@ -244,6 +267,8 @@ async fn play_playlist(
     if !file_path.is_file() {
         return Err(anyhow!("playlist not found").into());
     }
+
+    info!("playing playlist '{}'", playlist_name);
 
     video_sender
         .send(ThreadMessage::ChangeVideo {
