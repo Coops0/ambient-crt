@@ -79,7 +79,7 @@ async fn main() {
     .unwrap();
 
     for path in &[VIDEO_PATH, THUMB_PATH, PLAYLIST_PATH] {
-        drop(fs::create_dir(path).await);
+        let _ = fs::create_dir(path).await;
     }
 
     info!("checking if need to generate new thumbnails...");
