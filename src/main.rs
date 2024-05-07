@@ -1,3 +1,4 @@
+mod media_keys;
 mod playlist;
 mod thumbnails;
 mod vlc_manager;
@@ -7,20 +8,22 @@ mod web_util;
 use std::{
     fs::OpenOptions,
     path::{Path, PathBuf},
+    sync::mpsc::Sender,
 };
 
 use axum::routing::get;
+use media_keys::MediaKeyMessage;
 use once_cell::sync::OnceCell;
 use simplelog::{
     info, ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger,
 };
 use tokio::{fs, net::TcpListener};
 use tower_http::services::ServeDir;
-use vlc_manager::launch_vlc_thread;
+use vlc_manager::{create_vlc_channel, VlcMessage};
 use web_manager::manager_router;
 use web_util::StaticFile;
 
-use crate::thumbnails::generate_new_thumbs;
+use crate::{media_keys::create_enigo_channel, thumbnails::generate_new_thumbs};
 
 // this is for me so im not sanitizing anything
 // don't use this with any public facing server or ur gonna get OWNED!!!!
@@ -38,7 +41,7 @@ const DEFAULT_FLAGS: &[&str] = &[
     "--no-volume-save",
     "--video-on-top",
     "--no-snapshot-preview",
-    "--intf=dummy",
+    "--intf=dummy", // breaks stuff on macos, remove from flags.txt for testing locally
 ];
 
 pub static FLAGS: OnceCell<Vec<String>> = OnceCell::new();
@@ -92,17 +95,31 @@ async fn main() {
     info!("loaded {} flags", flags.len());
     let _ = FLAGS.set(flags);
 
+    let vlc_channel = create_vlc_channel();
+    let enigo_channel = create_enigo_channel();
+
     let app = manager_router()
         .nest_service("/thumbs", ServeDir::new(THUMB_PATH))
         .route("/", get(index))
         .route("/styles", get(styles))
         .route("/script", get(script))
-        .with_state(launch_vlc_thread());
+        .with_state(AppState {
+            vlc: vlc_channel,
+            media_keys: enigo_channel,
+        });
 
-    let listener = TcpListener::bind("0.0.0.0:80").await.unwrap();
-    info!("binded to port 80");
+    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    info!("binded to port 3000");
 
     axum::serve(listener, app).await.unwrap();
+}
+
+// make this clonable since we want the senders to be cloned
+// if we used an arc, then it would just share a reference
+#[derive(Clone)]
+pub struct AppState {
+    pub vlc: Sender<VlcMessage>,
+    pub media_keys: Sender<MediaKeyMessage>,
 }
 
 #[must_use]

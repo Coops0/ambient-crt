@@ -239,7 +239,8 @@ $("#savePlaylistButton").addEventListener("click", async () => {
 
   await savePlaylist(playlistName, videos);
   await fetchPlaylists();
-  $("#playlist").value = playlistName.replaceAll("_", " ");
+
+  $("#playlist").value = playlistName.replaceAll(" ", "_");
 });
 
 $("#deselectButton").addEventListener("click", () =>
@@ -260,6 +261,21 @@ function selectVideosFromPlaylist(playlistName) {
     checkbox.checked = playlist.includes(item.dataset.video);
   });
 }
+
+// 0 = play/pause
+// 1 = skip
+// 2 = back
+async function pressMediaKey(action) {
+  await fetch("/media-control", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
+  });
+}
+
+$("#playPauseButton").addEventListener("click", () => pressMediaKey(0));
+$("#nextButton").addEventListener("click", () => pressMediaKey(1));
+$("#backButton").addEventListener("click", () => pressMediaKey(2));
 
 fetchVideos();
 fetchPlaylists();

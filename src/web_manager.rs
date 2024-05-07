@@ -1,9 +1,9 @@
-use std::{path::Path, sync::mpsc::Sender};
+use std::path::Path;
 
 use anyhow::{anyhow, Context};
 use axum::{
     extract::{Query, Request, State},
-    routing::get,
+    routing::{get, patch},
     Json, Router,
 };
 use futures_util::TryStreamExt;
@@ -13,15 +13,16 @@ use tokio::fs;
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 
 use crate::{
+    media_keys::MediaKeyMessage,
     playlist::{self, Playlist},
     thumbnails::{generate_thumbnail, thumbnail_path},
     video_path,
-    vlc_manager::ThreadMessage,
+    vlc_manager::VlcMessage,
     web_util::{stream_to_file, AppError},
-    VIDEO_PATH,
+    AppState, VIDEO_PATH,
 };
 
-pub fn manager_router() -> Router<Sender<ThreadMessage>> {
+pub fn manager_router() -> Router<AppState> {
     Router::new()
         .route("/stop", get(stop_video))
         .route(
@@ -35,6 +36,7 @@ pub fn manager_router() -> Router<Sender<ThreadMessage>> {
             "/playlists",
             get(playlists).post(save_playlist).put(play_playlist),
         )
+        .route("/media-control", patch(media_control))
 }
 
 #[derive(Deserialize)]
@@ -48,7 +50,7 @@ async fn file_upload(
 ) -> Result<String, AppError> {
     let path = stream_to_file(&video_name, request.into_body().into_data_stream()).await?;
 
-    info!("uploaded file to {}", path.display());
+    info!("uploaded file to '{}'", path.display());
 
     let t = generate_thumbnail(&path).await?;
 
@@ -71,7 +73,7 @@ struct SwitchVideo {
 }
 
 async fn switch_video(
-    State(video_sender): State<Sender<ThreadMessage>>,
+    State(AppState { vlc, .. }): State<AppState>,
     Json(SwitchVideo {
         video_name,
         gain,
@@ -84,22 +86,19 @@ async fn switch_video(
     }
 
     info!("switching video to '{}'", video.display());
-
-    video_sender
-        .send(ThreadMessage::ChangeVideo {
-            file_path: video,
-            gain,
-            visualizer,
-            shuffle: false,
-        })
-        .context("failed to send message to vlc thread")?;
+    vlc.send(VlcMessage::ChangeVideo {
+        file_path: video,
+        gain,
+        visualizer,
+        shuffle: false,
+    })
+    .context("failed to send message to vlc thread")?;
 
     Ok(())
 }
 
-async fn stop_video(State(video_sender): State<Sender<ThreadMessage>>) -> Result<(), AppError> {
-    video_sender
-        .send(ThreadMessage::StopVideo)
+async fn stop_video(State(AppState { vlc, .. }): State<AppState>) -> Result<(), AppError> {
+    vlc.send(VlcMessage::StopVideo)
         .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
 }
 
@@ -242,7 +241,7 @@ struct PlayPlaylist {
 }
 
 async fn play_playlist(
-    State(video_sender): State<Sender<ThreadMessage>>,
+    State(AppState { vlc, .. }): State<AppState>,
     Json(PlayPlaylist {
         playlist_name,
         gain,
@@ -252,7 +251,7 @@ async fn play_playlist(
     let playlist_name = match playlist_name {
         Some(name) => name,
         None => {
-            let _ = video_sender.send(ThreadMessage::ChangeVideo {
+            let _ = vlc.send(VlcMessage::ChangeVideo {
                 gain,
                 visualizer,
                 file_path: Path::new(VIDEO_PATH).to_owned(),
@@ -270,12 +269,29 @@ async fn play_playlist(
 
     info!("playing playlist '{}'", playlist_name);
 
-    video_sender
-        .send(ThreadMessage::ChangeVideo {
-            gain,
-            visualizer,
-            file_path,
-            shuffle: true,
-        })
-        .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
+    vlc.send(VlcMessage::ChangeVideo {
+        gain,
+        visualizer,
+        file_path,
+        shuffle: true,
+    })
+    .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
+}
+
+#[derive(Deserialize)]
+struct MediaControl {
+    action: u8,
+}
+
+async fn media_control(
+    State(AppState { media_keys, .. }): State<AppState>,
+    Json(MediaControl { action }): Json<MediaControl>,
+) -> Result<(), AppError> {
+    match action {
+        0 => media_keys.send(MediaKeyMessage::PlayPause),
+        1 => media_keys.send(MediaKeyMessage::Skip),
+        2 => media_keys.send(MediaKeyMessage::Previous),
+        _ => return Err(anyhow!("invalid action").into()),
+    }
+    .map_err(|e| anyhow!("failed to send message to media keys thread -> {e:?}").into())
 }

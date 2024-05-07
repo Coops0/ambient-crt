@@ -8,7 +8,7 @@ use std::{
 
 use crate::FLAGS;
 
-pub enum ThreadMessage {
+pub enum VlcMessage {
     StopVideo,
     ChangeVideo {
         file_path: PathBuf,
@@ -18,14 +18,14 @@ pub enum ThreadMessage {
     },
 }
 
-pub fn launch_vlc_thread() -> Sender<ThreadMessage> {
-    let (send, rec) = mpsc::channel::<ThreadMessage>();
+pub fn create_vlc_channel() -> Sender<VlcMessage> {
+    let (send, rec) = mpsc::channel::<VlcMessage>();
     let _ = thread::spawn(move || thread_worker(&rec));
 
     send
 }
 
-fn thread_worker(rec: &Receiver<ThreadMessage>) {
+fn thread_worker(rec: &Receiver<VlcMessage>) {
     let mut current_vlc_instance = None::<Child>;
 
     while let Ok(msg) = rec.recv() {
@@ -35,7 +35,7 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
         }
 
         match msg {
-            ThreadMessage::ChangeVideo {
+            VlcMessage::ChangeVideo {
                 file_path: path,
                 gain,
                 visualizer,
@@ -46,7 +46,7 @@ fn thread_worker(rec: &Receiver<ThreadMessage>) {
 
                 current_vlc_instance = Some(vlc_instance);
             }
-            ThreadMessage::StopVideo => {
+            VlcMessage::StopVideo => {
                 // already handled
             }
         }
