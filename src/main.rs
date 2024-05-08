@@ -57,7 +57,6 @@ async fn main() {
     tokio::task::spawn_blocking(|| {
         // have to do this since file::create is blocking
         // & this can't take tokio's asyncread
-        //
         let log_file = OpenOptions::new()
             .create(true)
             .append(true)

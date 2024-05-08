@@ -133,6 +133,29 @@ async function savePlaylist(playlistName, videos) {
   await fetchPlaylists();
 }
 
+async function randomVideo() {
+  const response = await fetch("/videos");
+  if (!response.ok) {
+    return;
+  }
+
+  const videos = await response.json();
+  const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+
+  playVideo(randomVideo.name);
+}
+
+// 0 = play/pause
+// 1 = skip
+// 2 = back
+async function pressMediaKey(action) {
+  await fetch("/media-control", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
+  });
+}
+
 $("#browseButton").addEventListener("click", () => fileInput.click());
 
 $("#uploadForm").addEventListener("submit", async (e) => {
@@ -171,15 +194,7 @@ videoList.addEventListener("click", (e) => {
 });
 
 $("#randomButton").addEventListener("click", async () => {
-  const response = await fetch("/videos");
-  if (!response.ok) {
-    return;
-  }
-
-  const videos = await response.json();
-  const randomVideo = videos[Math.floor(Math.random() * videos.length)];
-
-  playVideo(randomVideo.name);
+  await randomVideo();
 });
 
 $("#shuffleButton").addEventListener("click", async () => {
@@ -259,17 +274,6 @@ function selectVideosFromPlaylist(playlistName) {
   document.querySelectorAll(".video-item").forEach((item) => {
     const checkbox = item.querySelector(".video-select");
     checkbox.checked = playlist.includes(item.dataset.video);
-  });
-}
-
-// 0 = play/pause
-// 1 = skip
-// 2 = back
-async function pressMediaKey(action) {
-  await fetch("/media-control", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action }),
   });
 }
 

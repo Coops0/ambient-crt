@@ -41,7 +41,7 @@ pub async fn generate_thumbnail(video_path: &PathBuf) -> anyhow::Result<PathBuf>
         .context("failed to generate thumbnail")?;
 
     if !output.status.success() {
-        bail!("ffmpeg failed: {:?}", output);
+        bail!("ffmpeg failed: {output:?}");
     }
 
     Ok(thumbnail_path)
