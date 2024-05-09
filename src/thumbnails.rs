@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use anyhow::{bail, Context};
+use anyhow::{bail, Context, Result};
 use simplelog::{error, info};
 use tokio::{fs, process::Command};
 
@@ -19,7 +19,7 @@ pub fn thumbnail_path<P: AsRef<Path>>(video_path: P) -> PathBuf {
     thumb_path
 }
 
-pub async fn generate_thumbnail(video_path: &PathBuf) -> anyhow::Result<PathBuf> {
+pub async fn generate_thumbnail(video_path: &PathBuf) -> Result<PathBuf> {
     let thumbnail_path = thumbnail_path(video_path);
 
     let output = Command::new("ffmpeg")
@@ -47,7 +47,7 @@ pub async fn generate_thumbnail(video_path: &PathBuf) -> anyhow::Result<PathBuf>
     Ok(thumbnail_path)
 }
 
-pub async fn generate_new_thumbs() -> anyhow::Result<()> {
+pub async fn generate_new_thumbs() -> Result<()> {
     let mut files = fs::read_dir(VIDEO_PATH).await?;
     while let Some(entry) = files.next_entry().await? {
         let file_type = entry.file_type().await?;

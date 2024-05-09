@@ -98,9 +98,7 @@ async fn main() {
     info!("loaded {} flags", flags.len());
     let _ = FLAGS.set(flags);
 
-    let vlc_channel = create_vlc_channel();
-    let enigo_channel = create_enigo_channel();
-
+    let (vlc_channel, enigo_channel) = (create_vlc_channel(), create_enigo_channel());
     let app = manager_router()
         .nest_service("/thumbs", ServeDir::new(THUMB_PATH))
         .route("/", get(index))

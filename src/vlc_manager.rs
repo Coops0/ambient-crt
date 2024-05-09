@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{Context, Result};
 use std::{
     path::PathBuf,
     process::{Child, Command},
@@ -58,7 +58,7 @@ fn play_video(
     gain: f32,
     visualizer: &Option<String>,
     shuffle: bool,
-) -> anyhow::Result<Child> {
+) -> Result<Child> {
     let mut vlc_builder = Command::new("vlc");
 
     for flag in unsafe { FLAGS.get_unchecked() } {

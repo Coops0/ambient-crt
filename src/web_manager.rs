@@ -44,10 +44,12 @@ struct VideoName {
     video_name: String,
 }
 
+type WebResult<T = ()> = Result<T, AppError>;
+
 async fn file_upload(
     Query(VideoName { video_name }): Query<VideoName>,
     request: Request,
-) -> Result<String, AppError> {
+) -> WebResult<String> {
     let path = stream_to_file(&video_name, request.into_body().into_data_stream()).await?;
     info!("uploaded file to '{}'", path.display());
 
@@ -77,7 +79,7 @@ async fn switch_video(
         gain,
         visualizer,
     }): Json<SwitchVideo>,
-) -> Result<(), AppError> {
+) -> WebResult {
     let video = video_path(&video_name);
     if !video.is_file() {
         return Err(anyhow!("video not found").into());
@@ -95,12 +97,12 @@ async fn switch_video(
     Ok(())
 }
 
-async fn stop_video(State(AppState { vlc, .. }): State<AppState>) -> Result<(), AppError> {
+async fn stop_video(State(AppState { vlc, .. }): State<AppState>) -> WebResult {
     vlc.send(VlcMessage::StopVideo)
         .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
 }
 
-async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> Result<(), AppError> {
+async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> WebResult {
     let video_path = video_path(&video_name);
     let _ = fs::remove_file(thumbnail_path(&video_path)).await;
 
@@ -131,7 +133,7 @@ struct VideoInfo {
     name_without_ext: String,
 }
 
-async fn videos() -> Result<Json<Vec<VideoInfo>>, AppError> {
+async fn videos() -> WebResult<Json<Vec<VideoInfo>>> {
     let files = ReadDirStream::new(fs::read_dir(VIDEO_PATH).await?)
         .into_stream()
         .try_filter_map(|entry| async move {
@@ -173,7 +175,7 @@ struct PlaylistResponse {
     videos: Vec<String>,
 }
 
-async fn playlists() -> Result<Json<Vec<PlaylistResponse>>, AppError> {
+async fn playlists() -> WebResult<Json<Vec<PlaylistResponse>>> {
     let files = playlist::playlists()
         .await?
         .into_iter()
@@ -214,7 +216,7 @@ async fn save_playlist(
         playlist_name,
         videos,
     }): Json<SavePlaylist>,
-) -> Result<(), AppError> {
+) -> WebResult {
     let processed_name = playlist_name_to_file(&playlist_name);
     let video_length = videos.len();
 
@@ -245,7 +247,7 @@ async fn play_playlist(
         gain,
         visualizer,
     }): Json<PlayPlaylist>,
-) -> Result<(), AppError> {
+) -> WebResult {
     let Some(playlist_name) = playlist_name else {
         info!("shuffling all videos");
         let _ = vlc.send(VlcMessage::ChangeVideo {
@@ -282,7 +284,7 @@ struct MediaControl {
 async fn media_control(
     State(AppState { media_keys, .. }): State<AppState>,
     Json(MediaControl { action }): Json<MediaControl>,
-) -> Result<(), AppError> {
+) -> WebResult {
     match action {
         0 => media_keys.send(MediaKeyMessage::PlayPause),
         1 => media_keys.send(MediaKeyMessage::Skip),
