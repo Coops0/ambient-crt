@@ -98,8 +98,7 @@ async fn switch_video(
 }
 
 async fn stop_video(State(AppState { vlc, .. }): State<AppState>) -> WebResult {
-    vlc.send(VlcMessage::StopVideo)
-        .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
+    vlc.send(VlcMessage::StopVideo).map_err(Into::into)
 }
 
 async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> WebResult {
@@ -121,9 +120,7 @@ async fn delete_video(Json(VideoName { video_name }): Json<VideoName>) -> WebRes
 
     info!("deleted video");
 
-    fs::remove_file(video_path)
-        .await
-        .map_err(|e| anyhow!("failed to delete video -> {e:?}").into())
+    fs::remove_file(video_path).await.map_err(Into::into)
 }
 
 #[derive(Serialize)]
@@ -253,7 +250,7 @@ async fn play_playlist(
         let _ = vlc.send(VlcMessage::ChangeVideo {
             gain,
             visualizer,
-            file_path: Path::new(VIDEO_PATH).to_owned(),
+            file_path: Path::new(VIDEO_PATH).to_path_buf(),
             shuffle: true,
         });
 
@@ -273,7 +270,7 @@ async fn play_playlist(
         file_path,
         shuffle: true,
     })
-    .map_err(|e| anyhow!("failed to send message to vlc thread -> {e:?}").into())
+    .map_err(Into::into)
 }
 
 #[derive(Deserialize)]
@@ -291,5 +288,5 @@ async fn media_control(
         2 => media_keys.send(MediaKeyMessage::Previous),
         _ => return Err(anyhow!("invalid action").into()),
     }
-    .map_err(|e| anyhow!("failed to send message to media keys thread -> {e:?}").into())
+    .map_err(Into::into)
 }

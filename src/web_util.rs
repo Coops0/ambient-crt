@@ -1,4 +1,4 @@
-use std::{io, path::PathBuf};
+use std::path::PathBuf;
 
 use ::futures::pin_mut;
 use anyhow::{anyhow, Context};
@@ -29,7 +29,7 @@ where
             .map_err(|_| anyhow!("failed to create file {path:?}"))?,
     );
 
-    let body_with_io_error = stream.map_err(io::Error::other);
+    let body_with_io_error = stream.map_err(std::io::Error::other);
     let body_reader = StreamReader::new(body_with_io_error);
     pin_mut!(body_reader);
 
