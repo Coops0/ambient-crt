@@ -124,6 +124,7 @@ pub struct AppState {
 }
 
 #[must_use]
+#[inline]
 pub fn video_path(path: &str) -> PathBuf {
     Path::new(VIDEO_PATH).join(path)
 }

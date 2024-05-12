@@ -184,7 +184,7 @@ async fn playlists() -> WebResult<Json<Vec<PlaylistResponse>>> {
                 .file_stem()
                 .unwrap_or_default()
                 .to_string_lossy()
-                .to_string(),
+                .into_owned(),
             videos: p
                 .videos
                 .iter()
