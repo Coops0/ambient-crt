@@ -107,6 +107,17 @@ async function deleteVideo(videoName) {
   }
 }
 
+async function playMedia(url) {
+  await fetch("/custom-media", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      url,
+      ...getSettings(),
+    }),
+  });
+}
+
 // pass in playlistName as undefined to shuffle all
 async function playPlaylist(playlistName) {
   await fetch("/playlists", {
@@ -131,18 +142,6 @@ async function savePlaylist(playlistName, videos) {
   });
 
   await fetchPlaylists();
-}
-
-async function randomVideo() {
-  const response = await fetch("/videos");
-  if (!response.ok) {
-    return;
-  }
-
-  const videos = await response.json();
-  const randomVideo = videos[Math.floor(Math.random() * videos.length)];
-
-  playVideo(randomVideo.name);
 }
 
 // 0 = play/pause
@@ -191,10 +190,6 @@ videoList.addEventListener("click", (e) => {
   if (classList.contains("delete-button")) {
     deleteVideo(videoName);
   }
-});
-
-$("#randomButton").addEventListener("click", async () => {
-  await randomVideo();
 });
 
 $("#shuffleButton").addEventListener("click", async () => {
@@ -266,6 +261,34 @@ $("#selectAllButton").addEventListener("click", () => {
   document
     .querySelectorAll(".video-select")
     .forEach((checkbox) => (checkbox.checked = true));
+});
+
+let listeningForPaste = false;
+
+$("#playMediaButton").addEventListener("click", () => {
+  listeningForPaste = true;
+  $("#pasteBackdrop").classList.remove("hidden");
+});
+
+document.addEventListener("paste", (e) => {
+  if (!listeningForPaste) {
+    return;
+  }
+
+  const url = e.clipboardData?.getData("text") || "";
+  if (url.trim().length === 0) {
+    return;
+  }
+
+  $("#pasteBackdrop").classList.add("hidden");
+  playMedia(url);
+});
+
+document.addEventListener("keydown", async (e) => {
+  if (listeningForPaste && e.key === "Escape") {
+    listeningForPaste = false;
+    $("#pasteBackdrop").classList.add("hidden");
+  }
 });
 
 function selectVideosFromPlaylist(playlistName) {

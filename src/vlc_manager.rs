@@ -16,6 +16,11 @@ pub enum VlcMessage {
         visualizer: Option<String>,
         shuffle: bool,
     },
+    PlayFromString {
+        media: String,
+        gain: f32,
+        visualizer: Option<String>,
+    },
 }
 
 pub fn create_vlc_channel() -> Sender<VlcMessage> {
@@ -41,8 +46,23 @@ fn thread_worker(rec: &Receiver<VlcMessage>) {
                 visualizer,
                 shuffle,
             } => {
-                let vlc_instance =
-                    play_video(&path, gain, &visualizer, shuffle).expect("failed to play video");
+                let vlc_instance = play_video(
+                    path.to_str().unwrap_or_default(),
+                    gain,
+                    &visualizer,
+                    shuffle,
+                )
+                .expect("failed to play video");
+
+                current_vlc_instance = Some(vlc_instance);
+            }
+            VlcMessage::PlayFromString {
+                media,
+                gain,
+                visualizer,
+            } => {
+                let vlc_instance = play_video(&media, gain, &visualizer, false)
+                    .expect("failed to play video from string");
 
                 current_vlc_instance = Some(vlc_instance);
             }
@@ -53,12 +73,7 @@ fn thread_worker(rec: &Receiver<VlcMessage>) {
     }
 }
 
-fn play_video(
-    path: &PathBuf,
-    gain: f32,
-    visualizer: &Option<String>,
-    shuffle: bool,
-) -> Result<Child> {
+fn play_video(path: &str, gain: f32, visualizer: &Option<String>, shuffle: bool) -> Result<Child> {
     let mut vlc_builder = Command::new("vlc");
 
     for flag in unsafe { FLAGS.get_unchecked() } {

@@ -13,6 +13,23 @@
         <script src="/script" defer></script>
     </head>
     <body class="bg-gray-900 text-purple-500 crt">
+        <div
+            id="pasteBackdrop"
+            class="hidden fixed inset-0 bg-black bg-opacity-50 z-50"
+        >
+            <div
+                class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black p-4 rounded-md"
+            >
+                <h2 class="text-2xl sm:text-3xl font-bold mb-4">
+                    paste anywhere
+                </h2>
+                <textarea
+                    class="w-full bg-black text-purple-500 px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
+                    placeholder="here for mobile"
+                ></textarea>
+            </div>
+        </div>
+
         <div class="max-w-7xl mx-auto px-4 py-8">
             <h1 class="text-4xl sm:text-6xl font-bold mb-8 text-center">
                 television
@@ -105,10 +122,10 @@
                                 stop
                             </button>
                             <button
-                                id="randomButton"
+                                id="playMediaButton"
                                 class="w-full bg-purple-500 hover:bg-purple-600 text-black py-3 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                             >
-                                random video
+                                play from clipboard
                             </button>
                             <button
                                 id="shuffleButton"

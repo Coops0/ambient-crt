@@ -3,13 +3,13 @@ use std::path::Path;
 use anyhow::{anyhow, Context};
 use axum::{
     extract::{Query, Request, State},
-    routing::{get, patch},
+    routing::{get, patch, put},
     Json, Router,
 };
 use futures_util::TryStreamExt;
 use serde::{Deserialize, Serialize};
-use simplelog::info;
-use tokio::fs;
+use simplelog::{info, warn};
+use tokio::{fs, process::Command};
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 
 use crate::{
@@ -36,6 +36,7 @@ pub fn manager_router() -> Router<AppState> {
             "/playlists",
             get(playlists).post(save_playlist).put(play_playlist),
         )
+        .route("/custom-media", put(play_media))
         .route("/media-control", patch(media_control))
 }
 
@@ -288,5 +289,49 @@ async fn media_control(
         2 => media_keys.send(MediaKeyMessage::Previous),
         _ => return Err(anyhow!("invalid action").into()),
     }
+    .map_err(Into::into)
+}
+
+#[derive(Deserialize)]
+struct PlayMedia {
+    url: String,
+    #[serde(default)]
+    gain: f32,
+    visualizer: Option<String>,
+}
+
+async fn play_media(
+    State(AppState { vlc, .. }): State<AppState>,
+    Json(PlayMedia {
+        url,
+        gain,
+        visualizer,
+    }): Json<PlayMedia>,
+) -> WebResult {
+    // yt-dlp --quiet --no-warnings --get-url -f "best[vcodec!=none][acodec!=none]/best" https://www.twitch.tv/ex
+    info!("getting direct url to media from '{url}'");
+    let yt_dlp_output = Command::new("yt-dlp")
+        .arg("--quiet")
+        .arg("--no-warnings")
+        .arg("--get-url")
+        .arg("-f")
+        .arg("best[vcodec!=none][acodec!=none]/best")
+        .arg(&url)
+        .output()
+        .await?;
+
+    if !yt_dlp_output.status.success() {
+        warn!("yt-dlp failed with: {yt_dlp_output:?}");
+        return Err(anyhow!("yt-dlp failed").into());
+    }
+
+    let direct_media_url = String::from_utf8(yt_dlp_output.stdout)?.trim().to_string();
+    info!("got direct url to media: '{direct_media_url}'");
+
+    vlc.send(VlcMessage::PlayFromString {
+        media: direct_media_url,
+        gain,
+        visualizer,
+    })
     .map_err(Into::into)
 }

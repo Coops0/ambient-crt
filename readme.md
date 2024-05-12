@@ -4,6 +4,7 @@
 
 - VLC
 - FFMPEG
+- YT-DLP
 - COMPUTER/PI/WHATEVER TO CONNECT TO OLD TV WITH AND HAVE RUNNING
 
 I bought an old 90's CRT and I want it to basically play videos on loop in the background.\
@@ -21,6 +22,7 @@ You then, can hook this up to the old CRT through various converters and it you 
 - log to file / stdout
 - okay web ui
 - play/pause skip/prev media controls
+- any custom website that yt-dlp can process directly (including live streams)
 - small/fast/reliable since rust
 
 This is not secured in any way so don't expose it to the internet.
