@@ -22,6 +22,7 @@ pub fn thumbnail_path<P: AsRef<Path>>(video_path: P) -> PathBuf {
 pub async fn generate_thumbnail(video_path: &PathBuf) -> Result<PathBuf> {
     let thumbnail_path = thumbnail_path(video_path);
 
+    // ffmpeg with this is so slow
     let output = Command::new("ffmpeg")
         .arg("-i")
         .arg(video_path)

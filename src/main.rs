@@ -60,7 +60,7 @@ async fn main() {
         let log_file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open("ambient_crt.log")
+            .open("crt.log")
             .unwrap();
 
         CombinedLogger::init(vec![
@@ -135,11 +135,13 @@ async fn index() -> Html<EmbeddedData> {
     let EmbeddedFile { data, .. } = unsafe { Asset::get("index.html").unwrap_unchecked() };
     Html(data)
 }
+
 async fn styles() -> impl IntoResponse {
     let EmbeddedFile { data, .. } = unsafe { Asset::get("styles.css").unwrap_unchecked() };
 
     ([(header::CONTENT_TYPE, "text/css")], data)
 }
+
 async fn script() -> EmbeddedData {
     // js can have type of octet stream
     unsafe { Asset::get("script.js").unwrap_unchecked() }.data
