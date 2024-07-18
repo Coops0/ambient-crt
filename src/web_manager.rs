@@ -9,7 +9,7 @@ use axum::{
 use futures_util::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use simplelog::{info, warn};
-use tokio::{fs, process::Command};
+use tokio::{fs, process::Command, task};
 use tokio_stream::{wrappers::ReadDirStream, StreamExt};
 
 use crate::{
@@ -54,8 +54,14 @@ async fn file_upload(
     let path = stream_to_file(&video_name, request.into_body().into_data_stream()).await?;
     info!("uploaded file to '{}'", path.display());
 
-    let t = generate_thumbnail(&path).await?;
-    info!("generated thumbnail at '{}'", t.display());
+    let path_for_task = path.clone();
+    // this takes forever for some reason
+    let _ = task::spawn(async move {
+        match generate_thumbnail(&path_for_task).await {
+            Ok(t) => info!("generated thumbnail at '{}'", t.display()),
+            Err(e) => warn!("failed to generate thumbnail: {e}"),
+        }
+    });
 
     let path_string = path
         .to_str()

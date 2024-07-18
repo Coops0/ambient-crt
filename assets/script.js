@@ -1,5 +1,6 @@
 // i love you jquery
 const $ = (selector) => document.querySelector(selector);
+const notyf = new Notyf();
 
 const fileInput = $("#fileInput");
 const fileNameInput = $("#fileNameInput");
@@ -42,6 +43,7 @@ async function fetchPlaylists() {
 async function fetchVideos() {
   const response = await fetch("/videos");
   if (!response.ok) {
+    console.error("Failed to fetch videos", response);
     return;
   }
 
@@ -70,7 +72,7 @@ async function fetchVideos() {
 }
 
 async function playVideo(videoName) {
-  await fetch("/videos", {
+  const response = await fetch("/videos", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -78,10 +80,19 @@ async function playVideo(videoName) {
       ...getSettings(),
     }),
   });
+
+  if (!response.ok) {
+    notyf.error("Failed to play video");
+    console.error(response);
+  }
 }
 
 async function stopVideo() {
-  await fetch("/stop");
+  const response = await fetch("/stop");
+  if (!response.ok) {
+    notyf.error("Failed to stop video");
+    console.error(response);
+  }
 }
 
 async function uploadVideo(file, fileName) {
@@ -91,7 +102,13 @@ async function uploadVideo(file, fileName) {
   });
 
   if (response.ok) {
-    fetchVideos();
+    const path = await response.text();
+    notyf.success(`Video uploaded to ${path}`);
+
+    await fetchVideos();
+  } else {
+    notyf.error("Failed to upload video");
+    console.error(response);
   }
 }
 
@@ -103,12 +120,16 @@ async function deleteVideo(videoName) {
   });
 
   if (response.ok) {
+    notyf.success("Video deleted");
     fetchVideos();
+  } else {
+    notyf.error("Failed to delete video");
+    console.error(response);
   }
 }
 
 async function playMedia(url) {
-  await fetch("/custom-media", {
+  const response = await fetch("/custom-media", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -116,11 +137,18 @@ async function playMedia(url) {
       ...getSettings(),
     }),
   });
+
+  if (response.ok) {
+    notyf.success("Playing custom media");
+  } else {
+    notyf.error("Failed to play media");
+    console.error(response);
+  }
 }
 
 // pass in playlistName as undefined to shuffle all
 async function playPlaylist(playlistName) {
-  await fetch("/playlists", {
+  const response = await fetch("/playlists", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -128,11 +156,16 @@ async function playPlaylist(playlistName) {
       ...getSettings(),
     }),
   });
+
+  if (!response.ok) {
+    notyf.error("Failed to play playlist");
+    console.error(response);
+  }
 }
 
 // videos = [] to delete
 async function savePlaylist(playlistName, videos) {
-  await fetch("/playlists", {
+  const response = await fetch("/playlists", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -141,18 +174,29 @@ async function savePlaylist(playlistName, videos) {
     }),
   });
 
-  await fetchPlaylists();
+  if (response.ok) {
+    notyf.success("Playlist saved");
+    await fetchPlaylists();
+  } else {
+    notyf.error("Failed to save playlist");
+    console.error(response);
+  }
 }
 
 // 0 = play/pause
 // 1 = skip
 // 2 = back
 async function pressMediaKey(action) {
-  await fetch("/media-control", {
+  const response = await fetch("/media-control", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action }),
   });
+
+  if (!response.ok) {
+    notyf.error("Failed to send media key");
+    console.error(response);
+  }
 }
 
 $("#browseButton").addEventListener("click", () => fileInput.click());
